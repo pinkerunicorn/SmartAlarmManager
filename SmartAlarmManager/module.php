@@ -267,6 +267,22 @@ class SmartAlarmManager extends IPSModule
                 }
             }
         }
+        
+        if ($item['UseEmail'] ?? true) {
+            $smtp = $this->ReadPropertyInteger("TargetSMTP");
+            $email = trim($this->ReadPropertyString("EmailAddress"));
+            if ($smtp > 0 && IPS_InstanceExists($smtp)) {
+                if ($email != "") {
+                    $this->SendDebug("Email", "Versuche Info-E-Mail zu senden an: " . $email, 0);
+                    $result = @SMTP_SendMailEx($smtp, $email, "SmartHome Info / Event", $message);
+                    if ($result === false) {
+                        $this->LogMessage("Fehler beim E-Mail Versand! Bitte prüfe die Einstellungen der SMTP-Instanz #$smtp", KL_ERROR);
+                    } else {
+                        $this->SendDebug("Email", "Info-E-Mail erfolgreich versendet.", 0);
+                    }
+                }
+            }
+        }
     }
 
     private function IsTriggered($currentVal, $triggerValStr)
