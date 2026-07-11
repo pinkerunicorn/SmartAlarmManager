@@ -88,6 +88,8 @@ class SmartAlarmManager extends IPSModule
 
         if ($type == 1) {
             // Info / Doorbell (Fire and Forget)
+            $this->LogMessage("Info/Event ausgelöst: " . $msg, KL_NOTIFY);
+            $this->SendDebug("Trigger", "Info/Event: " . $msg, 0);
             $this->TriggerInfo($item);
         } else {
             // Alarm with Escalation
@@ -100,6 +102,9 @@ class SmartAlarmManager extends IPSModule
                     "item" => $item
                 ];
                 $this->SetBuffer("ActiveAlarms", json_encode($alarms));
+                
+                $this->LogMessage("ALARM ausgelöst (Stufe 1): " . $msg, KL_WARNING);
+                $this->SendDebug("Trigger", "Alarm Stufe 1: " . $msg, 0);
                 
                 $this->TriggerLevel1($item);
                 
@@ -120,6 +125,8 @@ class SmartAlarmManager extends IPSModule
             // User acknowledges the alarm
             if ($Value == false) {
                 $this->SetValue($Ident, false);
+                $this->LogMessage("Alarm quittiert: " . $Ident, KL_NOTIFY);
+                $this->SendDebug("Acknowledge", "Quittiert: " . $Ident, 0);
                 
                 $vid = substr($Ident, 6);
                 $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
@@ -156,12 +163,16 @@ class SmartAlarmManager extends IPSModule
             if ($alarm['level'] == 1 && $elapsed >= $lvl2Time) {
                 $alarm['level'] = 2;
                 $changed = true;
+                $this->LogMessage("Alarm Eskalation (Stufe 2): " . $alarm['item']['Message'], KL_WARNING);
+                $this->SendDebug("Escalation", "Stufe 2: " . $alarm['item']['Message'], 0);
                 $this->TriggerLevel2($alarm['item']);
             }
 
             if ($alarm['level'] == 2 && $elapsed >= $lvl3Time) {
                 $alarm['level'] = 3;
                 $changed = true;
+                $this->LogMessage("VOLLALARM Eskalation (Stufe 3): " . $alarm['item']['Message'], KL_ERROR);
+                $this->SendDebug("Escalation", "Stufe 3 (VOLLALARM): " . $alarm['item']['Message'], 0);
                 $this->TriggerLevel3($alarm['item']);
             }
         }
