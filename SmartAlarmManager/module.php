@@ -185,11 +185,15 @@ class SmartAlarmManager extends IPSModule
     private function TriggerLevel1($item)
     {
         $message = $item['Message'] ?? "Alarm";
-        if (!($item['UseWebFront'] ?? true)) return;
+        if ($item['UseWebFront'] ?? true) {
+            $webfront = $this->ReadPropertyInteger("TargetWebFront");
+            if ($webfront > 0 && IPS_InstanceExists($webfront)) {
+                @WFC_PushNotification($webfront, "Alarm!", $message, "", 0);
+            }
+        }
         
-        $webfront = $this->ReadPropertyInteger("TargetWebFront");
-        if ($webfront > 0 && IPS_InstanceExists($webfront)) {
-            @WFC_PushNotification($webfront, "Alarm!", $message, "", 0);
+        if ($item['UseSonos'] ?? true) {
+            $this->TriggerSonos($message);
         }
     }
 
@@ -225,6 +229,10 @@ class SmartAlarmManager extends IPSModule
                 $this->LogMessage("E-Mail nicht gesendet: Es ist keine gültige SMTP-Instanz ausgewählt.", KL_WARNING);
             }
         }
+        
+        if ($item['UseSonos'] ?? true) {
+            $this->TriggerSonos("Achtung, Alarm: " . $message);
+        }
     }
 
     private function TriggerLevel3($item)
@@ -245,6 +253,10 @@ class SmartAlarmManager extends IPSModule
             if ($webfront > 0 && IPS_InstanceExists($webfront)) {
                 @WFC_PushNotification($webfront, "VOLLALARM", $message, "", 0);
             }
+        }
+        
+        if ($item['UseSonos'] ?? true) {
+            $this->TriggerSonos("Vollalarm: " . $message);
         }
     }
 
@@ -281,6 +293,27 @@ class SmartAlarmManager extends IPSModule
                         $this->SendDebug("Email", "Info-E-Mail erfolgreich versendet.", 0);
                     }
                 }
+            }
+        }
+        
+        if ($item['UseSonos'] ?? true) {
+            $this->TriggerSonos($message);
+        }
+    }
+    
+    private function TriggerSonos($message)
+    {
+        $sonos = $this->ReadPropertyInteger("TargetSonos");
+        if ($sonos > 0 && IPS_InstanceExists($sonos)) {
+            // Check for known Google TTS / Sonos functions
+            if (function_exists('GSTTS_PlayText')) {
+                $this->SendDebug("Sonos", "GSTTS_PlayText: " . $message, 0);
+                @GSTTS_PlayText($sonos, $message);
+            } elseif (function_exists('SNS_PlayText')) {
+                $this->SendDebug("Sonos", "SNS_PlayText: " . $message, 0);
+                @SNS_PlayText($sonos, $message);
+            } else {
+                $this->LogMessage("Sonos nicht angesteuert: Weder GSTTS_PlayText noch SNS_PlayText Funktion gefunden.", KL_WARNING);
             }
         }
     }

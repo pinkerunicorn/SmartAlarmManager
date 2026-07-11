@@ -41,6 +41,11 @@
             "caption": "Vestaboard Instanz"
         },
         {
+            "type": "SelectInstance",
+            "name": "TargetSonos",
+            "caption": "Sonos / GoogleTTS Instanz"
+        },
+        {
             "type": "Label",
             "caption": "Überwachte Variablen"
         },
@@ -102,6 +107,13 @@
                 {
                     "caption": "E-Mail",
                     "name": "UseEmail",
+                    "width": "80px",
+                    "add": true,
+                    "edit": { "type": "CheckBox" }
+                },
+                {
+                    "caption": "Sonos TTS",
+                    "name": "UseSonos",
                     "width": "80px",
                     "add": true,
                     "edit": { "type": "CheckBox" }

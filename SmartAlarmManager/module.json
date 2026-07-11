@@ -35,6 +35,10 @@
             "type": "integer",
             "default": 0
         },
+        "TargetSonos": {
+            "type": "integer",
+            "default": 0
+        },
         "EmailAddress": {
             "type": "string",
             "default": ""
