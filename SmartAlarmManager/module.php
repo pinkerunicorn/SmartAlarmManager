@@ -190,6 +190,7 @@ class SmartAlarmManager extends IPSModule
             $webfront = $this->ReadPropertyInteger("TargetWebFront");
             if ($webfront > 0 && IPS_InstanceExists($webfront)) {
                 @WFC_PushNotification($webfront, "Alarm!", $message, "", 0);
+                @WFC_SendNotification($webfront, "Alarm!", $message, "Warning", 0);
             }
         }
         
@@ -253,6 +254,7 @@ class SmartAlarmManager extends IPSModule
             $webfront = $this->ReadPropertyInteger("TargetWebFront");
             if ($webfront > 0 && IPS_InstanceExists($webfront)) {
                 @WFC_PushNotification($webfront, "VOLLALARM", $message, "", 0);
+                @WFC_SendNotification($webfront, "VOLLALARM", $message, "Alert", 0);
             }
         }
         
@@ -269,6 +271,7 @@ class SmartAlarmManager extends IPSModule
             $webfront = $this->ReadPropertyInteger("TargetWebFront");
             if ($webfront > 0 && IPS_InstanceExists($webfront)) {
                 @WFC_PushNotification($webfront, "Info", $message, "", 0);
+                @WFC_SendNotification($webfront, "Info", $message, "Information", 0);
             }
         }
         
