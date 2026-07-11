@@ -14,6 +14,7 @@ class SmartAlarmManager extends IPSModule
         $this->RegisterPropertyInteger("TargetWebFront", 0);
         $this->RegisterPropertyInteger("TargetSMTP", 0);
         $this->RegisterPropertyInteger("TargetVestaboard", 0);
+        $this->RegisterPropertyInteger("TargetSonos", 0);
         $this->RegisterPropertyString("EmailAddress", "");
         
         $this->RegisterTimer("EscalationTimer", 0, 'SAM_CheckEscalation($_IPS[\'TARGET\']);');
