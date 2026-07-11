@@ -307,14 +307,14 @@ class SmartAlarmManager extends IPSModule
         $sonos = $this->ReadPropertyInteger("TargetSonos");
         if ($sonos > 0 && IPS_InstanceExists($sonos)) {
             // Check for known Google TTS / Sonos functions
-            if (function_exists('GSTTS_PlayText')) {
-                $this->SendDebug("Sonos", "GSTTS_PlayText: " . $message, 0);
-                @GSTTS_PlayText($sonos, $message);
+            if (function_exists('GSTTS_PlayMessage')) {
+                $this->SendDebug("Sonos", "GSTTS_PlayMessage: " . $message, 0);
+                @GSTTS_PlayMessage($sonos, $message);
             } elseif (function_exists('SNS_PlayText')) {
                 $this->SendDebug("Sonos", "SNS_PlayText: " . $message, 0);
                 @SNS_PlayText($sonos, $message);
             } else {
-                $this->LogMessage("Sonos nicht angesteuert: Weder GSTTS_PlayText noch SNS_PlayText Funktion gefunden.", KL_WARNING);
+                $this->LogMessage("Sonos nicht angesteuert: Weder GSTTS_PlayMessage noch SNS_PlayText Funktion gefunden.", KL_WARNING);
             }
         }
     }
