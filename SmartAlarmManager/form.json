@@ -1,0 +1,91 @@
+{
+    "elements": [
+        {
+            "type": "Label",
+            "caption": "Eskalations-Zeiten (für Alarm-Typ)"
+        },
+        {
+            "type": "NumberSpinner",
+            "name": "EscalationTimeLvl2",
+            "caption": "Stufe 2 (Sekunden bis Email/Vestaboard)",
+            "suffix": "s"
+        },
+        {
+            "type": "NumberSpinner",
+            "name": "EscalationTimeLvl3",
+            "caption": "Stufe 3 (Sekunden bis Vollalarm)",
+            "suffix": "s"
+        },
+        {
+            "type": "Label",
+            "caption": "Schnittstellen / Ausgabegeräte"
+        },
+        {
+            "type": "SelectInstance",
+            "name": "TargetWebFront",
+            "caption": "WebFront / App (für Push Notifications)"
+        },
+        {
+            "type": "SelectInstance",
+            "name": "TargetSMTP",
+            "caption": "SMTP Instanz (für E-Mails)"
+        },
+        {
+            "type": "ValidationTextBox",
+            "name": "EmailAddress",
+            "caption": "Empfänger E-Mail Adresse"
+        },
+        {
+            "type": "SelectInstance",
+            "name": "TargetVestaboard",
+            "caption": "Vestaboard Instanz"
+        },
+        {
+            "type": "Label",
+            "caption": "Überwachte Variablen"
+        },
+        {
+            "type": "List",
+            "name": "MonitoredVariables",
+            "caption": "Variablen",
+            "add": true,
+            "delete": true,
+            "columns": [
+                {
+                    "caption": "Sensor/Auslöser",
+                    "name": "VariableID",
+                    "width": "auto",
+                    "add": 0,
+                    "edit": { "type": "SelectVariable" }
+                },
+                {
+                    "caption": "Nachricht/Titel",
+                    "name": "Message",
+                    "width": "250px",
+                    "add": "Neuer Alarm",
+                    "edit": { "type": "ValidationTextBox" }
+                },
+                {
+                    "caption": "Auslöse-Wert (Zustand)",
+                    "name": "TriggerValue",
+                    "width": "150px",
+                    "add": "true",
+                    "edit": { "type": "ValidationTextBox" }
+                },
+                {
+                    "caption": "Verhalten",
+                    "name": "AlarmType",
+                    "width": "150px",
+                    "add": 0,
+                    "edit": {
+                        "type": "Select",
+                        "options": [
+                            { "caption": "Alarm (mit Eskalation)", "value": 0 },
+                            { "caption": "Info / Türklingel (Einmalig)", "value": 1 }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}
