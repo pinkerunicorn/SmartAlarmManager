@@ -84,6 +84,27 @@
                             { "caption": "Info / Türklingel (Einmalig)", "value": 1 }
                         ]
                     }
+                },
+                {
+                    "caption": "App / WebFront",
+                    "name": "UseWebFront",
+                    "width": "80px",
+                    "add": true,
+                    "edit": { "type": "CheckBox" }
+                },
+                {
+                    "caption": "Vestaboard",
+                    "name": "UseVestaboard",
+                    "width": "80px",
+                    "add": true,
+                    "edit": { "type": "CheckBox" }
+                },
+                {
+                    "caption": "E-Mail",
+                    "name": "UseEmail",
+                    "width": "80px",
+                    "add": true,
+                    "edit": { "type": "CheckBox" }
                 }
             ]
         }

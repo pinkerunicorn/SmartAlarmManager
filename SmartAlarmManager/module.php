@@ -88,7 +88,7 @@ class SmartAlarmManager extends IPSModule
 
         if ($type == 1) {
             // Info / Doorbell (Fire and Forget)
-            $this->TriggerInfo($msg);
+            $this->TriggerInfo($item);
         } else {
             // Alarm with Escalation
             $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
@@ -97,11 +97,11 @@ class SmartAlarmManager extends IPSModule
                 $alarms[$vid] = [
                     "timestamp" => time(),
                     "level" => 1,
-                    "message" => $msg
+                    "item" => $item
                 ];
                 $this->SetBuffer("ActiveAlarms", json_encode($alarms));
                 
-                $this->TriggerLevel1($msg);
+                $this->TriggerLevel1($item);
                 
                 $ident = "Alarm_" . $vid;
                 if (@IPS_GetObjectIDByIdent($ident, $this->InstanceID)) {
@@ -156,13 +156,13 @@ class SmartAlarmManager extends IPSModule
             if ($alarm['level'] == 1 && $elapsed >= $lvl2Time) {
                 $alarm['level'] = 2;
                 $changed = true;
-                $this->TriggerLevel2($alarm['message']);
+                $this->TriggerLevel2($alarm['item']);
             }
 
             if ($alarm['level'] == 2 && $elapsed >= $lvl3Time) {
                 $alarm['level'] = 3;
                 $changed = true;
-                $this->TriggerLevel3($alarm['message']);
+                $this->TriggerLevel3($alarm['item']);
             }
         }
 
@@ -171,54 +171,77 @@ class SmartAlarmManager extends IPSModule
         }
     }
 
-    private function TriggerLevel1($message)
+    private function TriggerLevel1($item)
     {
+        $message = $item['Message'] ?? "Alarm";
+        if (!($item['UseWebFront'] ?? true)) return;
+        
         $webfront = $this->ReadPropertyInteger("TargetWebFront");
         if ($webfront > 0 && IPS_InstanceExists($webfront)) {
             @WFC_PushNotification($webfront, "Alarm!", $message, "", 0);
         }
     }
 
-    private function TriggerLevel2($message)
+    private function TriggerLevel2($item)
     {
-        $vesta = $this->ReadPropertyInteger("TargetVestaboard");
-        if ($vesta > 0 && IPS_InstanceExists($vesta)) {
-            if (function_exists('VESTA_SendMessage')) {
-                @VESTA_SendMessage($vesta, "ALARM:\n" . $message);
+        $message = $item['Message'] ?? "Alarm";
+        
+        if ($item['UseVestaboard'] ?? true) {
+            $vesta = $this->ReadPropertyInteger("TargetVestaboard");
+            if ($vesta > 0 && IPS_InstanceExists($vesta)) {
+                if (function_exists('VESTA_SendMessage')) {
+                    @VESTA_SendMessage($vesta, "ALARM:\n" . $message);
+                }
             }
         }
 
-        $smtp = $this->ReadPropertyInteger("TargetSMTP");
-        $email = $this->ReadPropertyString("EmailAddress");
-        if ($smtp > 0 && IPS_InstanceExists($smtp) && $email != "") {
-            @SMTP_SendMailEx($smtp, $email, "SmartHome Alarm Stufe 2", "Folgender Alarm wurde ausgelöst und noch nicht quittiert:\n\n" . $message);
-        }
-    }
-
-    private function TriggerLevel3($message)
-    {
-        $vesta = $this->ReadPropertyInteger("TargetVestaboard");
-        if ($vesta > 0 && IPS_InstanceExists($vesta)) {
-            if (function_exists('VESTA_SendMessage')) {
-                @VESTA_SendMessage($vesta, "!!! VOLLALARM !!!\n" . $message);
+        if ($item['UseEmail'] ?? true) {
+            $smtp = $this->ReadPropertyInteger("TargetSMTP");
+            $email = $this->ReadPropertyString("EmailAddress");
+            if ($smtp > 0 && IPS_InstanceExists($smtp) && $email != "") {
+                @SMTP_SendMailEx($smtp, $email, "SmartHome Alarm Stufe 2", "Folgender Alarm wurde ausgelöst und noch nicht quittiert:\n\n" . $message);
             }
         }
-        $webfront = $this->ReadPropertyInteger("TargetWebFront");
-        if ($webfront > 0 && IPS_InstanceExists($webfront)) {
-            @WFC_PushNotification($webfront, "VOLLALARM", $message, "", 0);
+    }
+
+    private function TriggerLevel3($item)
+    {
+        $message = $item['Message'] ?? "Alarm";
+        
+        if ($item['UseVestaboard'] ?? true) {
+            $vesta = $this->ReadPropertyInteger("TargetVestaboard");
+            if ($vesta > 0 && IPS_InstanceExists($vesta)) {
+                if (function_exists('VESTA_SendMessage')) {
+                    @VESTA_SendMessage($vesta, "!!! VOLLALARM !!!\n" . $message);
+                }
+            }
+        }
+        
+        if ($item['UseWebFront'] ?? true) {
+            $webfront = $this->ReadPropertyInteger("TargetWebFront");
+            if ($webfront > 0 && IPS_InstanceExists($webfront)) {
+                @WFC_PushNotification($webfront, "VOLLALARM", $message, "", 0);
+            }
         }
     }
 
-    private function TriggerInfo($message)
+    private function TriggerInfo($item)
     {
-        $webfront = $this->ReadPropertyInteger("TargetWebFront");
-        if ($webfront > 0 && IPS_InstanceExists($webfront)) {
-            @WFC_PushNotification($webfront, "Info", $message, "", 0);
+        $message = $item['Message'] ?? "Info";
+        
+        if ($item['UseWebFront'] ?? true) {
+            $webfront = $this->ReadPropertyInteger("TargetWebFront");
+            if ($webfront > 0 && IPS_InstanceExists($webfront)) {
+                @WFC_PushNotification($webfront, "Info", $message, "", 0);
+            }
         }
-        $vesta = $this->ReadPropertyInteger("TargetVestaboard");
-        if ($vesta > 0 && IPS_InstanceExists($vesta)) {
-            if (function_exists('VESTA_SendMessage')) {
-                @VESTA_SendMessage($vesta, $message);
+        
+        if ($item['UseVestaboard'] ?? true) {
+            $vesta = $this->ReadPropertyInteger("TargetVestaboard");
+            if ($vesta > 0 && IPS_InstanceExists($vesta)) {
+                if (function_exists('VESTA_SendMessage')) {
+                    @VESTA_SendMessage($vesta, $message);
+                }
             }
         }
     }
