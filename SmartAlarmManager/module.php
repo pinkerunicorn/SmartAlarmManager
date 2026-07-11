@@ -208,9 +208,21 @@ class SmartAlarmManager extends IPSModule
 
         if ($item['UseEmail'] ?? true) {
             $smtp = $this->ReadPropertyInteger("TargetSMTP");
-            $email = $this->ReadPropertyString("EmailAddress");
-            if ($smtp > 0 && IPS_InstanceExists($smtp) && $email != "") {
-                @SMTP_SendMailEx($smtp, $email, "SmartHome Alarm Stufe 2", "Folgender Alarm wurde ausgelöst und noch nicht quittiert:\n\n" . $message);
+            $email = trim($this->ReadPropertyString("EmailAddress"));
+            if ($smtp > 0 && IPS_InstanceExists($smtp)) {
+                if ($email != "") {
+                    $this->SendDebug("Email", "Versuche E-Mail zu senden an: " . $email, 0);
+                    $result = @SMTP_SendMailEx($smtp, $email, "SmartHome Alarm Stufe 2", "Folgender Alarm wurde ausgelöst und noch nicht quittiert:\n\n" . $message);
+                    if ($result === false) {
+                        $this->LogMessage("Fehler beim E-Mail Versand! Bitte prüfe die Einstellungen der SMTP-Instanz #$smtp", KL_ERROR);
+                    } else {
+                        $this->SendDebug("Email", "E-Mail erfolgreich versendet.", 0);
+                    }
+                } else {
+                    $this->LogMessage("E-Mail nicht gesendet: Es ist keine E-Mail Adresse in der Konfiguration hinterlegt.", KL_WARNING);
+                }
+            } else {
+                $this->LogMessage("E-Mail nicht gesendet: Es ist keine gültige SMTP-Instanz ausgewählt.", KL_WARNING);
             }
         }
     }
