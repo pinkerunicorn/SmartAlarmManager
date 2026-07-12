@@ -78,6 +78,13 @@
                     "edit": { "type": "ValidationTextBox" }
                 },
                 {
+                    "caption": "Verzögerung (Sek)",
+                    "name": "DelaySeconds",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": { "type": "NumberSpinner" }
+                },
+                {
                     "caption": "Verhalten",
                     "name": "AlarmType",
                     "width": "150px",

@@ -16,10 +16,11 @@ class SmartAlarmManager extends IPSModule
         $this->RegisterPropertyInteger("TargetVestaboard", 0);
         $this->RegisterPropertyInteger("TargetSonos", 0);
         $this->RegisterPropertyString("EmailAddress", "");
-        
         $this->RegisterTimer("EscalationTimer", 0, 'SAM_CheckEscalation($_IPS[\'TARGET\']);');
+        $this->RegisterTimer("DelayTimer", 0, 'SAM_HandleDelays($_IPS[\'TARGET\']);');
         
         $this->SetBuffer("ActiveAlarms", "{}");
+        $this->SetBuffer("ActiveDelays", "{}");
 
         // Profiles for Tile UI
         if (!IPS_VariableProfileExists("SAM.SystemStatus")) {
@@ -89,11 +90,62 @@ class SmartAlarmManager extends IPSModule
         $currentVal = $Data[0]; // New value
         
         foreach ($monitored as $item) {
-            if (($item['VariableID'] ?? 0) == $SenderID) {
+            $vid = $item['VariableID'] ?? 0;
+            if ($vid == $SenderID) {
                 $triggerVal = $item['TriggerValue'] ?? 'true';
                 if ($this->IsTriggered($currentVal, $triggerVal)) {
-                    $this->HandleTrigger($item);
+                    $delay = $item['DelaySeconds'] ?? 0;
+                    if ($delay > 0) {
+                        $delays = json_decode($this->GetBuffer("ActiveDelays"), true) ?: [];
+                        if (!isset($delays[$vid])) {
+                            $delays[$vid] = [
+                                "triggerTime" => time() + $delay,
+                                "item" => $item
+                            ];
+                            $this->SetBuffer("ActiveDelays", json_encode($delays));
+                            $this->SetTimerInterval("DelayTimer", 1000); // Check every second
+                        }
+                    } else {
+                        $this->HandleTrigger($item);
+                    }
+                } else {
+                    // Condition not met, cancel delay if active
+                    $delays = json_decode($this->GetBuffer("ActiveDelays"), true) ?: [];
+                    if (isset($delays[$vid])) {
+                        unset($delays[$vid]);
+                        $this->SetBuffer("ActiveDelays", json_encode($delays));
+                        if (empty($delays)) {
+                            $this->SetTimerInterval("DelayTimer", 0);
+                        }
+                    }
                 }
+            }
+        }
+    }
+
+    public function HandleDelays()
+    {
+        $delays = json_decode($this->GetBuffer("ActiveDelays"), true) ?: [];
+        if (empty($delays)) {
+            $this->SetTimerInterval("DelayTimer", 0);
+            return;
+        }
+
+        $now = time();
+        $changed = false;
+
+        foreach ($delays as $vid => $delayObj) {
+            if ($now >= $delayObj['triggerTime']) {
+                $this->HandleTrigger($delayObj['item']);
+                unset($delays[$vid]);
+                $changed = true;
+            }
+        }
+
+        if ($changed) {
+            $this->SetBuffer("ActiveDelays", json_encode($delays));
+            if (empty($delays)) {
+                $this->SetTimerInterval("DelayTimer", 0);
             }
         }
     }
