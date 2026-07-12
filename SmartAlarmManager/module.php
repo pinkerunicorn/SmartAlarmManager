@@ -20,6 +20,23 @@ class SmartAlarmManager extends IPSModule
         $this->RegisterTimer("EscalationTimer", 0, 'SAM_CheckEscalation($_IPS[\'TARGET\']);');
         
         $this->SetBuffer("ActiveAlarms", "{}");
+
+        // Profiles for Tile UI
+        if (!IPS_VariableProfileExists("SAM.SystemStatus")) {
+            IPS_CreateVariableProfile("SAM.SystemStatus", 1);
+            IPS_SetVariableProfileAssociation("SAM.SystemStatus", 0, "Alles OK", "Ok", 0x00FF00);
+            IPS_SetVariableProfileAssociation("SAM.SystemStatus", 1, "Info / Hinweis", "Information", 0xFFFF00);
+            IPS_SetVariableProfileAssociation("SAM.SystemStatus", 2, "ALARM!", "Warning", 0xFF0000);
+            IPS_SetVariableProfileAssociation("SAM.SystemStatus", 3, "ESKALATION", "Warning", 0xFF0000);
+            IPS_SetVariableProfileAssociation("SAM.SystemStatus", 4, "VOLLALARM", "Alert", 0xFF0000);
+        }
+
+        // Summary Variables for Tile UI
+        $this->RegisterVariableInteger("SystemStatus", "System Status", "SAM.SystemStatus", 1);
+        $this->RegisterVariableInteger("ActiveAlarmsCount", "Aktive Alarme", "", 2);
+        $this->RegisterVariableString("LastEvent", "Letztes Ereignis", "", 3);
+        $this->RegisterVariableBoolean("AcknowledgeAll", "Alle Alarme quittieren", "~Switch", 4);
+        $this->EnableAction("AcknowledgeAll");
     }
 
     public function ApplyChanges()
@@ -92,6 +109,14 @@ class SmartAlarmManager extends IPSModule
             $this->LogMessage("Info/Event ausgelöst: " . $msg, KL_NOTIFY);
             $this->SendDebug("Trigger", "Info/Event: " . $msg, 0);
             $this->TriggerInfo($item);
+            
+            $this->SetValue("LastEvent", date("d.m.Y H:i:s") . " - " . $msg);
+            // Info pulse for status (only if nothing worse is active)
+            if ($this->GetValue("SystemStatus") == 0) {
+                $this->SetValue("SystemStatus", 1);
+                IPS_Sleep(3000); // Pulse visual state
+                $this->UpdateStatusVariables(); // Re-evaluates based on active alarms
+            }
         } else {
             // Alarm with Escalation
             $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
@@ -114,8 +139,12 @@ class SmartAlarmManager extends IPSModule
                     $this->SetValue($ident, true);
                 }
                 
+                $this->SetValue("LastEvent", date("d.m.Y H:i:s") . " - ALARM: " . $msg);
+                
                 // Ensure Escalation Timer runs
                 $this->SetTimerInterval("EscalationTimer", 10000);
+                
+                $this->UpdateStatusVariables();
             }
         }
     }
@@ -139,6 +168,25 @@ class SmartAlarmManager extends IPSModule
                 if (empty($alarms)) {
                     $this->SetTimerInterval("EscalationTimer", 0);
                 }
+                $this->UpdateStatusVariables();
+            }
+        } elseif ($Ident === "AcknowledgeAll") {
+            if ($Value == true) {
+                $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
+                foreach ($alarms as $vid => $alarm) {
+                    $ident = "Alarm_" . $vid;
+                    if (@IPS_GetObjectIDByIdent($ident, $this->InstanceID)) {
+                        $this->SetValue($ident, false);
+                    }
+                }
+                $this->SetBuffer("ActiveAlarms", "{}");
+                $this->SetTimerInterval("EscalationTimer", 0);
+                $this->UpdateStatusVariables();
+                $this->LogMessage("Alle Alarme quittiert.", KL_NOTIFY);
+                $this->SetValue("LastEvent", date("d.m.Y H:i:s") . " - Alle Alarme quittiert");
+                
+                // Reset button instantly
+                $this->SetValue("AcknowledgeAll", false);
             }
         } else {
             throw new Exception("Invalid Ident");
@@ -150,6 +198,7 @@ class SmartAlarmManager extends IPSModule
         $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
         if (empty($alarms)) {
             $this->SetTimerInterval("EscalationTimer", 0);
+            $this->UpdateStatusVariables();
             return;
         }
 
@@ -180,6 +229,27 @@ class SmartAlarmManager extends IPSModule
 
         if ($changed) {
             $this->SetBuffer("ActiveAlarms", json_encode($alarms));
+            $this->UpdateStatusVariables();
+        }
+    }
+
+    private function UpdateStatusVariables()
+    {
+        $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
+        $count = count($alarms);
+        $this->SetValue("ActiveAlarmsCount", $count);
+
+        if ($count == 0) {
+            $this->SetValue("SystemStatus", 0); // Alles OK
+        } else {
+            $maxLevel = 1;
+            foreach ($alarms as $alarm) {
+                if ($alarm['level'] > $maxLevel) {
+                    $maxLevel = $alarm['level'];
+                }
+            }
+            // Level 1 = 2 (ALARM!), Level 2 = 3 (ESKALATION), Level 3 = 4 (VOLLALARM)
+            $this->SetValue("SystemStatus", $maxLevel + 1);
         }
     }
 
