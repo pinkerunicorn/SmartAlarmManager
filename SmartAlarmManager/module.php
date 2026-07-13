@@ -694,5 +694,473 @@ class SmartAlarmManager extends IPSModuleStrict
         IPS_LogMessage('SmartVillaKunterbunt', 'SmartAlarmManager: ' . $Message);
         return true;
     }
+
+    public function GetConfigurationForm(): string
+    {
+        return <<<'EOT'
+{
+    "elements": [
+        {
+            "type": "Label",
+            "caption": "Eskalations-Zeiten (für Alarm-Typ)"
+        },
+        {
+            "type": "NumberSpinner",
+            "name": "EscalationTimeLvl2",
+            "caption": "Stufe 2 (Sekunden bis Email/Vestaboard)",
+            "suffix": "s"
+        },
+        {
+            "type": "NumberSpinner",
+            "name": "EscalationTimeLvl3",
+            "caption": "Stufe 3 (Sekunden bis Vollalarm)",
+            "suffix": "s"
+        },
+        {
+            "type": "Label",
+            "caption": "Schnittstellen / Ausgabegeräte (Global)"
+        },
+        {
+            "type": "SelectInstance",
+            "name": "TargetWebFront",
+            "caption": "WebFront / App (für Push Notifications)"
+        },
+        {
+            "type": "SelectInstance",
+            "name": "TargetSMTP",
+            "caption": "SMTP Instanz (für E-Mails)"
+        },
+        {
+            "type": "ValidationTextBox",
+            "name": "EmailAddress",
+            "caption": "Empfänger E-Mail Adresse"
+        },
+        {
+            "type": "SelectInstance",
+            "name": "TargetVestaboard",
+            "caption": "Vestaboard Instanz"
+        },
+        {
+            "type": "SelectInstance",
+            "name": "TargetSonos",
+            "caption": "Sonos / GoogleTTS Instanz"
+        },
+        {
+            "type": "Label",
+            "caption": "Aktions-Profile"
+        },
+        {
+            "type": "List",
+            "name": "ActionProfiles",
+            "caption": "Profile",
+            "add": true,
+            "delete": true,
+            "changeOrder": true,
+            "rowCount": 15,
+            "columns": [
+                {
+                    "caption": "Profil-ID (Name)",
+                    "name": "ProfileID",
+                    "width": "150px",
+                    "add": "Neues_Profil",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "App",
+                    "name": "UseWebFront",
+                    "width": "50px",
+                    "add": true,
+                    "edit": {
+                        "type": "CheckBox"
+                    }
+                },
+                {
+                    "caption": "E-Mail",
+                    "name": "UseEmail",
+                    "width": "50px",
+                    "add": true,
+                    "edit": {
+                        "type": "CheckBox"
+                    }
+                },
+                {
+                    "caption": "Vestaboard",
+                    "name": "UseVestaboard",
+                    "width": "50px",
+                    "add": true,
+                    "edit": {
+                        "type": "CheckBox"
+                    }
+                },
+                {
+                    "caption": "Sonos",
+                    "name": "UseSonos",
+                    "width": "50px",
+                    "add": true,
+                    "edit": {
+                        "type": "CheckBox"
+                    }
+                },
+                {
+                    "caption": "MP3-Instanz",
+                    "name": "HmIP_MP3_Inst",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": {
+                        "type": "SelectInstance"
+                    }
+                },
+                {
+                    "caption": "MP3 Track(s)",
+                    "name": "MP3_Sounds",
+                    "width": "100px",
+                    "add": "1",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "Lautstärke",
+                    "name": "MP3_Volume",
+                    "width": "80px",
+                    "add": 100,
+                    "edit": {
+                        "type": "NumberSpinner"
+                    }
+                },
+                {
+                    "caption": "Dauer (s)",
+                    "name": "MP3_Duration",
+                    "width": "60px",
+                    "add": 0,
+                    "edit": {
+                        "type": "NumberSpinner"
+                    }
+                },
+                {
+                    "caption": "LED-Instanz",
+                    "name": "HmIP_LED_Inst",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": {
+                        "type": "SelectInstance"
+                    }
+                },
+                {
+                    "caption": "Ist MP3P-Licht?",
+                    "name": "HmIP_LED_IsMP3P",
+                    "width": "80px",
+                    "add": false,
+                    "edit": {
+                        "type": "CheckBox"
+                    }
+                },
+                {
+                    "caption": "LED Helligkeit",
+                    "name": "LED_Brightness",
+                    "width": "80px",
+                    "add": 100,
+                    "edit": {
+                        "type": "NumberSpinner"
+                    }
+                },
+                {
+                    "caption": "LED Farbe",
+                    "name": "LED_Color",
+                    "width": "100px",
+                    "add": 4,
+                    "edit": {
+                        "type": "Select",
+                        "options": [
+                            {
+                                "caption": "Aus",
+                                "value": 0
+                            },
+                            {
+                                "caption": "Blau",
+                                "value": 1
+                            },
+                            {
+                                "caption": "Grün",
+                                "value": 2
+                            },
+                            {
+                                "caption": "Türkis",
+                                "value": 3
+                            },
+                            {
+                                "caption": "Rot",
+                                "value": 4
+                            },
+                            {
+                                "caption": "Violett",
+                                "value": 5
+                            },
+                            {
+                                "caption": "Gelb",
+                                "value": 6
+                            },
+                            {
+                                "caption": "Weiß",
+                                "value": 7
+                            }
+                        ]
+                    }
+                },
+                {
+                    "caption": "LED Modus",
+                    "name": "LED_Mode",
+                    "width": "100px",
+                    "add": 1,
+                    "edit": {
+                        "type": "Select",
+                        "options": [
+                            {
+                                "caption": "Dauerlicht",
+                                "value": 1
+                            },
+                            {
+                                "caption": "Blinken (L)",
+                                "value": 2
+                            },
+                            {
+                                "caption": "Blinken (M)",
+                                "value": 3
+                            },
+                            {
+                                "caption": "Blinken (S)",
+                                "value": 4
+                            },
+                            {
+                                "caption": "Blitzen (L)",
+                                "value": 5
+                            },
+                            {
+                                "caption": "Blitzen (M)",
+                                "value": 6
+                            },
+                            {
+                                "caption": "Blitzen (S)",
+                                "value": 7
+                            },
+                            {
+                                "caption": "Pulsieren (L)",
+                                "value": 8
+                            },
+                            {
+                                "caption": "Pulsieren (M)",
+                                "value": 9
+                            },
+                            {
+                                "caption": "Pulsieren (S)",
+                                "value": 10
+                            }
+                        ]
+                    }
+                },
+                {
+                    "caption": "Sirenen-Instanz",
+                    "name": "HmIP_Siren_Inst",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": {
+                        "type": "SelectInstance"
+                    }
+                },
+                {
+                    "caption": "Sirene Ton",
+                    "name": "Siren_Acoustic",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": {
+                        "type": "Select",
+                        "options": [
+                            {
+                                "caption": "Kein Ton",
+                                "value": 0
+                            },
+                            {
+                                "caption": "Frequenz steigend",
+                                "value": 1
+                            },
+                            {
+                                "caption": "Frequenz fallend",
+                                "value": 2
+                            },
+                            {
+                                "caption": "Frequenz steigen/fallend",
+                                "value": 3
+                            },
+                            {
+                                "caption": "Frequenz tief/hoch",
+                                "value": 4
+                            },
+                            {
+                                "caption": "Frequenz tief",
+                                "value": 5
+                            },
+                            {
+                                "caption": "Frequenz hoch",
+                                "value": 6
+                            }
+                        ]
+                    }
+                },
+                {
+                    "caption": "Sirene Optik",
+                    "name": "Siren_Optical",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": {
+                        "type": "Select",
+                        "options": [
+                            {
+                                "caption": "Kein Licht",
+                                "value": 0
+                            },
+                            {
+                                "caption": "Blinken",
+                                "value": 1
+                            },
+                            {
+                                "caption": "Blitzen",
+                                "value": 2
+                            }
+                        ]
+                    }
+                },
+                {
+                    "caption": "Ziel-Variable",
+                    "name": "TargetVariableID",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": {
+                        "type": "SelectVariable"
+                    }
+                },
+                {
+                    "caption": "Ziel-Wert",
+                    "name": "TargetVariableValue",
+                    "width": "100px",
+                    "add": "",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Label",
+            "caption": "Überwachte Variablen"
+        },
+        {
+            "type": "List",
+            "name": "MonitoredVariables",
+            "caption": "Variablen",
+            "add": true,
+            "delete": true,
+            "changeOrder": true,
+            "rowCount": 15,
+            "columns": [
+                {
+                    "caption": "Sensor/Auslöser",
+                    "name": "VariableID",
+                    "width": "auto",
+                    "add": 0,
+                    "edit": {
+                        "type": "SelectVariable"
+                    }
+                },
+                {
+                    "caption": "Nachricht/Titel",
+                    "name": "Message",
+                    "width": "250px",
+                    "add": "Neuer Alarm",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "Auslöse-Wert",
+                    "name": "TriggerValue",
+                    "width": "150px",
+                    "add": "true",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "Verzögerung (s)",
+                    "name": "DelaySeconds",
+                    "width": "100px",
+                    "add": 0,
+                    "edit": {
+                        "type": "NumberSpinner"
+                    }
+                },
+                {
+                    "caption": "Alarm/Eskalations-Typ",
+                    "name": "AlarmType",
+                    "width": "150px",
+                    "add": 0,
+                    "edit": {
+                        "type": "Select",
+                        "options": [
+                            {
+                                "caption": "Alarm (mit Eskalation)",
+                                "value": 0
+                            },
+                            {
+                                "caption": "Info / Türklingel (Einmalig)",
+                                "value": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "caption": "Aktions-Profil (Name)",
+                    "name": "ProfileID",
+                    "width": "200px",
+                    "add": "Neues_Profil",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "type": "Label",
+            "caption": "Test: Aktions-Profil testen"
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "type": "ValidationTextBox",
+                    "name": "TestProfileID",
+                    "caption": "Profil-ID (Name)",
+                    "value": "Briefkasten"
+                },
+                {
+                    "type": "Button",
+                    "caption": "Profil testen (An)",
+                    "onClick": "SAM_TestProfile($id, $TestProfileID, false);"
+                },
+                {
+                    "type": "Button",
+                    "caption": "Profil stoppen (Aus)",
+                    "onClick": "SAM_TestProfile($id, $TestProfileID, true);"
+                }
+            ]
+        }
+    ]
 }
+EOT;
+    }
+}
+
 
