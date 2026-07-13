@@ -339,7 +339,7 @@ class SmartAlarmManager extends IPSModule
             if ($visu > 0 && IPS_InstanceExists($visu)) {
                 $this->LogMessage("App/Visu: Sende Push & Notification", KL_NOTIFY);
                 if (function_exists('VISU_PostNotification')) {
-                    VISU_PostNotification($visu, "Alarm!", $message, "Warning", "");
+                    VISU_PostNotification($visu, "Alarm!", $message, "Warning", 0);
                 }
             }
         }
@@ -408,7 +408,7 @@ class SmartAlarmManager extends IPSModule
             if ($visu > 0 && IPS_InstanceExists($visu)) {
                 $this->LogMessage("App/Visu: Sende Push & Notification", KL_NOTIFY);
                 if (function_exists('VISU_PostNotification')) {
-                    VISU_PostNotification($visu, "VOLLALARM", $message, "Alert", "Alarm");
+                    VISU_PostNotification($visu, "VOLLALARM", $message, "Alert", 0);
                 }
             }
         }
@@ -432,7 +432,7 @@ class SmartAlarmManager extends IPSModule
             if ($visu > 0 && IPS_InstanceExists($visu)) {
                 $this->LogMessage("App/Visu: Sende Push & Notification", KL_NOTIFY);
                 if (function_exists('VISU_PostNotification')) {
-                    VISU_PostNotification($visu, "Info", $message, "Information", "");
+                    VISU_PostNotification($visu, "Info", $message, "Information", 0);
                 }
             }
         }
