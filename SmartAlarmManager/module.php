@@ -486,9 +486,15 @@ class SmartAlarmManager extends IPSModule
         if ($mp3 > 0 && IPS_InstanceExists($mp3)) {
             $soundStr = $profile['MP3_Sounds'] ?? "1";
             $vol = $profile['MP3_Volume'] ?? 100;
-            $rep = $profile['MP3_Repeat'] ?? 0;
-            $string = "L=$vol,DU=0,DV=0,RTU=0,RTV=0,R=$rep,SL=" . $soundStr;
-            $this->LogMessage("Homematic MP3-Gong (Instanz $mp3): Spiele Tracks '$soundStr' mit Lautstärke $vol%", KL_NOTIFY);
+            $duration = $profile['MP3_Duration'] ?? 0;
+            
+            // Wenn Dauer angegeben, dann DU=0 (Sekunden) und DV=Dauer, R=255 (unendlich)
+            // Wenn keine Dauer (0), dann nur 1x abspielen
+            $rep = ($duration > 0) ? 255 : 0;
+            $dv = ($duration > 0) ? $duration : 0;
+            
+            $string = "L=$vol,DU=0,DV=$dv,RTU=0,RTV=0,R=$rep,SL=" . $soundStr;
+            $this->LogMessage("Homematic MP3-Gong (Instanz $mp3): Spiele Tracks '$soundStr' (Lautstärke $vol%, Dauer: $duration s)", KL_NOTIFY);
             $this->SendDebug("HmIP-MP3", "Sende $string an Instanz $mp3", 0);
             @HM_WriteValueString($mp3, 'COMBINED_PARAMETER', $string);
         }

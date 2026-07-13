@@ -113,9 +113,9 @@
                     "edit": { "type": "NumberSpinner" }
                 },
                 {
-                    "caption": "Wdh.",
-                    "name": "MP3_Repeat",
-                    "width": "50px",
+                    "caption": "Dauer (s)",
+                    "name": "MP3_Duration",
+                    "width": "60px",
                     "add": 0,
                     "edit": { "type": "NumberSpinner" }
                 },
