@@ -16,10 +16,8 @@ class SmartAlarmManager extends IPSModule
         $this->RegisterPropertyInteger("TargetSMTP", 0);
         $this->RegisterPropertyInteger("TargetVestaboard", 0);
         $this->RegisterPropertyInteger("TargetSonos", 0);
-        $this->RegisterPropertyInteger("TargetHmIP_MP3", 0);
-        $this->RegisterPropertyString("TargetHmIP_LEDs", "[]");
-        $this->RegisterPropertyString("TargetHmIP_Sirens", "[]");
         $this->RegisterPropertyString("EmailAddress", "");
+        
         $this->RegisterTimer("EscalationTimer", 0, 'SAM_CheckEscalation($_IPS[\'TARGET\']);');
         $this->RegisterTimer("DelayTimer", 0, 'SAM_HandleDelays($_IPS[\'TARGET\']);');
         
@@ -65,7 +63,6 @@ class SmartAlarmManager extends IPSModule
             if ($vid > 0 && IPS_VariableExists($vid)) {
                 $this->RegisterMessage($vid, VM_UPDATE);
                 
-                // If it's an Alarm type (0), create an Acknowledge Variable
                 if (($item['AlarmType'] ?? 0) == 0) {
                     $ident = "Alarm_" . $vid;
                     $activeIdents[] = $ident;
@@ -75,7 +72,6 @@ class SmartAlarmManager extends IPSModule
             }
         }
         
-        // Remove variables that are no longer configured
         foreach (IPS_GetChildrenIDs($this->InstanceID) as $childID) {
             $ident = IPS_GetObject($childID)['ObjectIdent'];
             if (strpos($ident, "Alarm_") === 0) {
@@ -104,7 +100,7 @@ class SmartAlarmManager extends IPSModule
         $monitored = json_decode($this->ReadPropertyString("MonitoredVariables"), true);
         if (!is_array($monitored)) return;
 
-        $currentVal = $Data[0]; // New value
+        $currentVal = $Data[0]; 
         
         foreach ($monitored as $item) {
             $vid = $item['VariableID'] ?? 0;
@@ -120,13 +116,12 @@ class SmartAlarmManager extends IPSModule
                                 "item" => $item
                             ];
                             $this->SetBuffer("ActiveDelays", json_encode($delays));
-                            $this->SetTimerInterval("DelayTimer", 1000); // Check every second
+                            $this->SetTimerInterval("DelayTimer", 1000);
                         }
                     } else {
                         $this->HandleTrigger($item);
                     }
                 } else {
-                    // Condition not met, cancel delay if active
                     $delays = json_decode($this->GetBuffer("ActiveDelays"), true) ?: [];
                     if (isset($delays[$vid])) {
                         unset($delays[$vid]);
@@ -136,7 +131,6 @@ class SmartAlarmManager extends IPSModule
                         }
                     }
                     
-                    // Also turn off LEDs and Sirens if it was an Info or Alarm that just got resolved by the sensor
                     $profile = $this->GetActionProfile($item['ProfileID'] ?? '');
                     $this->TriggerHomematicLEDs($profile, true);
                     $this->TriggerHomematicSirens($profile, true);
@@ -180,20 +174,17 @@ class SmartAlarmManager extends IPSModule
         $profile = $this->GetActionProfile($item['ProfileID'] ?? '');
 
         if ($type == 1) {
-            // Info / Doorbell (Fire and Forget)
             $this->LogMessage("Info/Event ausgelöst: " . $msg, KL_NOTIFY);
             $this->SendDebug("Trigger", "Info/Event: " . $msg, 0);
             $this->TriggerInfo($profile, $msg);
             
             $this->SetValue("LastEvent", date("d.m.Y H:i:s") . " - " . $msg);
-            // Info pulse for status (only if nothing worse is active)
             if ($this->GetValue("SystemStatus") == 0) {
                 $this->SetValue("SystemStatus", 1);
-                IPS_Sleep(3000); // Pulse visual state
-                $this->UpdateStatusVariables(); // Re-evaluates based on active alarms
+                IPS_Sleep(3000); 
+                $this->UpdateStatusVariables(); 
             }
         } else {
-            // Alarm with Escalation
             $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
             
             if (!isset($alarms[$vid])) {
@@ -216,10 +207,7 @@ class SmartAlarmManager extends IPSModule
                 }
                 
                 $this->SetValue("LastEvent", date("d.m.Y H:i:s") . " - ALARM: " . $msg);
-                
-                // Ensure Escalation Timer runs
                 $this->SetTimerInterval("EscalationTimer", 10000);
-                
                 $this->UpdateStatusVariables();
             }
         }
@@ -228,7 +216,6 @@ class SmartAlarmManager extends IPSModule
     public function RequestAction($Ident, $Value)
     {
         if (strpos($Ident, "Alarm_") === 0) {
-            // User acknowledges the alarm
             if ($Value == false) {
                 $this->SetValue($Ident, false);
                 $this->LogMessage("Alarm quittiert: " . $Ident, KL_NOTIFY);
@@ -238,8 +225,8 @@ class SmartAlarmManager extends IPSModule
                 $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
                 if (isset($alarms[$vid])) {
                     $profile = $alarms[$vid]['profile'] ?? [];
-                    $this->TriggerHomematicLEDs($profile, true); // Turn off LEDs
-                    $this->TriggerHomematicSirens($profile, true); // Turn off Sirens
+                    $this->TriggerHomematicLEDs($profile, true); 
+                    $this->TriggerHomematicSirens($profile, true); 
                     unset($alarms[$vid]);
                     $this->SetBuffer("ActiveAlarms", json_encode($alarms));
                 }
@@ -258,8 +245,8 @@ class SmartAlarmManager extends IPSModule
                         $this->SetValue($ident, false);
                     }
                     $profile = $alarm['profile'] ?? [];
-                    $this->TriggerHomematicLEDs($profile, true); // Turn off LEDs
-                    $this->TriggerHomematicSirens($profile, true); // Turn off Sirens
+                    $this->TriggerHomematicLEDs($profile, true); 
+                    $this->TriggerHomematicSirens($profile, true); 
                 }
                 $this->SetBuffer("ActiveAlarms", "{}");
                 $this->SetTimerInterval("EscalationTimer", 0);
@@ -267,7 +254,6 @@ class SmartAlarmManager extends IPSModule
                 $this->LogMessage("Alle Alarme quittiert.", KL_NOTIFY);
                 $this->SetValue("LastEvent", date("d.m.Y H:i:s") . " - Alle Alarme quittiert");
                 
-                // Reset button instantly
                 $this->SetValue("AcknowledgeAll", false);
             }
         } else {
@@ -323,7 +309,6 @@ class SmartAlarmManager extends IPSModule
         $this->SetValue("ActiveAlarmsCount", $count);
         
         if ($count == 0) {
-            // Keep status at 1 if Info was triggered recently, else 0
             if ($this->GetValue("SystemStatus") > 1) {
                 $this->SetValue("SystemStatus", 0);
             }
@@ -334,7 +319,6 @@ class SmartAlarmManager extends IPSModule
                     $maxLevel = $alarm['level'];
                 }
             }
-            // Level 1 = 2 (ALARM!), Level 2 = 3 (ESKALATION), Level 3 = 4 (VOLLALARM)
             $this->SetValue("SystemStatus", $maxLevel + 1);
         }
     }
@@ -374,11 +358,7 @@ class SmartAlarmManager extends IPSModule
             $email = trim($this->ReadPropertyString("EmailAddress"));
             if ($smtp > 0 && IPS_InstanceExists($smtp)) {
                 if ($email != "") {
-                    $this->SendDebug("Email", "Versuche E-Mail zu senden an: " . $email, 0);
-                    $result = @SMTP_SendMailEx($smtp, $email, "SmartHome Alarm Stufe 2", "Folgender Alarm wurde ausgelöst und noch nicht quittiert:\n\n" . $message);
-                    if ($result === false) {
-                        $this->LogMessage("Fehler beim E-Mail Versand! Bitte prüfe die Einstellungen der SMTP-Instanz #$smtp", KL_ERROR);
-                    }
+                    @SMTP_SendMailEx($smtp, $email, "SmartHome Alarm Stufe 2", "Folgender Alarm wurde ausgelöst und noch nicht quittiert:\n\n" . $message);
                 }
             }
         }
@@ -462,12 +442,9 @@ class SmartAlarmManager extends IPSModule
     {
         $sonos = $this->ReadPropertyInteger("TargetSonos");
         if ($sonos > 0 && IPS_InstanceExists($sonos)) {
-            // Check for known Google TTS / Sonos functions
             if (function_exists('GSTTS_PlayMessage')) {
-                $this->SendDebug("Sonos", "GSTTS_PlayMessage: " . $message, 0);
                 @GSTTS_PlayMessage($sonos, $message);
             } elseif (function_exists('SNS_PlayText')) {
-                $this->SendDebug("Sonos", "SNS_PlayText: " . $message, 0);
                 @SNS_PlayText($sonos, $message);
             }
         }
@@ -475,14 +452,11 @@ class SmartAlarmManager extends IPSModule
 
     private function TriggerHomematicMP3($profile)
     {
-        if (!($profile['UseHmIP_MP3'] ?? false)) return;
-        
-        $mp3 = $this->ReadPropertyInteger("TargetHmIP_MP3");
+        $mp3 = $profile['HmIP_MP3_Inst'] ?? 0;
         if ($mp3 > 0 && IPS_InstanceExists($mp3)) {
             $soundStr = $profile['MP3_Sounds'] ?? "1";
             $vol = $profile['MP3_Volume'] ?? 100;
             $rep = $profile['MP3_Repeat'] ?? 0;
-            // L=vol, DU=0 (Sekunden), DV=0, RTU=0, RTV=0, R=rep, SL=soundStr
             $string = "L=$vol,DU=0,DV=0,RTU=0,RTV=0,R=$rep,SL=" . $soundStr;
             $this->SendDebug("HmIP-MP3", "Spiele Sounds $soundStr auf Instanz $mp3", 0);
             @HM_WriteValueString($mp3, 'COMBINED_PARAMETER', $string);
@@ -491,134 +465,89 @@ class SmartAlarmManager extends IPSModule
 
     private function TriggerHomematicLEDs($profile, $turnOff = false)
     {
-        if (!$turnOff && !($profile['UseHmIP_LED'] ?? false)) return;
-        
-        $leds = json_decode($this->ReadPropertyString("TargetHmIP_LEDs"), true);
-        if (!is_array($leds) || count($leds) == 0) return;
-
-        $color = $profile['LED_Color'] ?? 4; 
-        $mode = $profile['LED_Mode'] ?? 1; 
-        $bright = $profile['LED_Brightness'] ?? 100;
-
-        foreach ($leds as $led) {
-            $instId = $led['InstanceID'] ?? 0;
-            if ($instId > 0 && IPS_InstanceExists($instId)) {
-                $isMP3P = $led['IsMP3P'] ?? false;
-                
-                if ($isMP3P) {
-                    if ($turnOff) {
-                        $string = 'L=100,DV=10,DU=0,RTV=0,RTU=1,C=0';
-                    } else {
-                        $string = "L=$bright,DV=31,DU=2,RTV=0,RTU=1,C=$color";
-                    }
+        $instId = $profile['HmIP_LED_Inst'] ?? 0;
+        if ($instId > 0 && IPS_InstanceExists($instId)) {
+            $color = $profile['LED_Color'] ?? 4; 
+            $mode = $profile['LED_Mode'] ?? 1; 
+            $bright = $profile['LED_Brightness'] ?? 100;
+            $isMP3P = $profile['HmIP_LED_IsMP3P'] ?? false;
+            
+            if ($isMP3P) {
+                if ($turnOff) {
+                    $string = 'L=100,DV=10,DU=0,RTV=0,RTU=1,C=0';
                 } else {
-                    if ($turnOff) {
-                        $string = 'L=0,DV=31,DU=2,RTV=0,RTU=0,C=0,CB=0,RTTOV=0,RTTOU=3';
-                    } else {
-                        $string = "L=$bright,DV=31,DU=2,RTV=0,RTU=0,C=$color,CB=$mode,RTTOV=0,RTTOU=3";
-                    }
+                    $string = "L=$bright,DV=31,DU=2,RTV=0,RTU=1,C=$color";
                 }
-
-                $this->SendDebug("HmIP-LED", "Sende $string an LED Instanz $instId", 0);
-                @HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
+            } else {
+                if ($turnOff) {
+                    $string = 'L=0,DV=31,DU=2,RTV=0,RTU=0,C=0,CB=0,RTTOV=0,RTTOU=3';
+                } else {
+                    $string = "L=$bright,DV=31,DU=2,RTV=0,RTU=0,C=$color,CB=$mode,RTTOV=0,RTTOU=3";
+                }
             }
+
+            $this->SendDebug("HmIP-LED", "Sende $string an LED Instanz $instId", 0);
+            @HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
         }
     }
 
     private function TriggerHomematicSirens($profile, $turnOff = false)
     {
-        if (!$turnOff && !($profile['UseHmIP_Siren'] ?? false)) return;
-        
-        $sirens = json_decode($this->ReadPropertyString("TargetHmIP_Sirens"), true);
-        if (!is_array($sirens) || count($sirens) == 0) return;
+        $instId = $profile['HmIP_Siren_Inst'] ?? 0;
+        if ($instId > 0 && IPS_InstanceExists($instId)) {
+            $ac = $profile['Siren_Acoustic'] ?? 1;
+            $opt = $profile['Siren_Optical'] ?? 1;
 
-        $ac = $profile['Siren_Acoustic'] ?? 1;
-        $opt = $profile['Siren_Optical'] ?? 1;
-
-        // ASIR-O uses Acoustic (A), Optical (O), Duration Value (DV), Duration Unit (DU)
-        // O=0 (Off), 1=Blink, 2=Flash
-        // A=0 (Off), 1=Freq rising, 2=Freq falling, 3=rising/falling etc.
-        // Actually for ASIR, it's L=... DU=... DV=... for combined but ASIR has dedicated COMBINED_PARAMETER fields:
-        // Wait, ASIR-O COMBINED_PARAMETER is typically "O=1,A=1,DV=...". 
-        // Let's use the standard ASIR combined param: O=$opt, A=$ac, DV=31, DU=2
-        // If turnOff is true, O=0, A=0, DV=31, DU=2
-
-        if ($turnOff) {
-            $string = "O=0,A=0,DV=31,DU=2";
-        } else {
-            $string = "O=$opt,A=$ac,DV=31,DU=2";
-        }
-
-        foreach ($sirens as $s) {
-            $instId = $s['InstanceID'] ?? 0;
-            if ($instId > 0 && IPS_InstanceExists($instId)) {
-                $this->SendDebug("HmIP-Siren", "Sende $string an Sirenen Instanz $instId", 0);
-                @HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
+            if ($turnOff) {
+                $string = "O=0,A=0,DV=31,DU=2";
+            } else {
+                $string = "O=$opt,A=$ac,DV=31,DU=2";
             }
+
+            $this->SendDebug("HmIP-Siren", "Sende $string an Sirenen Instanz $instId", 0);
+            @HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
         }
     }
 
-    public function TestHmIP_MP3(string $soundStr, int $vol, int $rep)
+    public function TestHmIP_MP3(int $mp3Inst, string $soundStr, int $vol, int $rep)
     {
-        $mp3 = $this->ReadPropertyInteger("TargetHmIP_MP3");
-        if ($mp3 > 0 && IPS_InstanceExists($mp3)) {
+        if ($mp3Inst > 0 && IPS_InstanceExists($mp3Inst)) {
             $string = "L=$vol,DU=0,DV=0,RTU=0,RTV=0,R=$rep,SL=" . $soundStr;
-            $this->SendDebug("HmIP-MP3-Test", "Spiele Sounds $soundStr auf Instanz $mp3", 0);
-            @HM_WriteValueString($mp3, 'COMBINED_PARAMETER', $string);
-            echo "Sound $soundStr wurde an Instanz $mp3 gesendet.";
+            $this->SendDebug("HmIP-MP3-Test", "Spiele Sounds $soundStr auf Instanz $mp3Inst", 0);
+            @HM_WriteValueString($mp3Inst, 'COMBINED_PARAMETER', $string);
+            echo "Sound $soundStr wurde an Instanz $mp3Inst gesendet.";
         } else {
-            echo "Fehler: Keine gültige MP3-Gong Instanz ausgewählt!";
+            echo "Fehler: Keine oder ungültige MP3-Gong Instanz ausgewählt!";
         }
     }
 
-    public function TestHmIP_LED(int $color, int $bright, int $durationSeconds)
+    public function TestHmIP_LED(int $ledInst, bool $isMP3P, int $color, int $bright, int $durationSeconds)
     {
-        $leds = json_decode($this->ReadPropertyString("TargetHmIP_LEDs"), true);
-        if (!is_array($leds) || count($leds) == 0) {
-            echo "Fehler: Keine LED-Instanzen ausgewählt!";
-            return;
-        }
-
-        $count = 0;
-        foreach ($leds as $led) {
-            $instId = $led['InstanceID'] ?? 0;
-            if ($instId > 0 && IPS_InstanceExists($instId)) {
-                $isMP3P = $led['IsMP3P'] ?? false;
-                
-                if ($isMP3P) {
-                    $string = "L=$bright,DV=$durationSeconds,DU=0,RTV=0,RTU=1,C=$color";
-                } else {
-                    $string = "L=$bright,DV=$durationSeconds,DU=0,RTV=0,RTU=0,C=$color,CB=1,RTTOV=0,RTTOU=3";
-                }
-                
-                $this->SendDebug("HmIP-LED-Test", "Sende $string an LED Instanz $instId", 0);
-                @HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
-                $count++;
+        if ($ledInst > 0 && IPS_InstanceExists($ledInst)) {
+            if ($isMP3P) {
+                $string = "L=$bright,DV=$durationSeconds,DU=0,RTV=0,RTU=1,C=$color";
+            } else {
+                $string = "L=$bright,DV=$durationSeconds,DU=0,RTV=0,RTU=0,C=$color,CB=1,RTTOV=0,RTTOU=3";
             }
+            
+            $this->SendDebug("HmIP-LED-Test", "Sende $string an LED Instanz $ledInst", 0);
+            @HM_WriteValueString($ledInst, 'COMBINED_PARAMETER', $string);
+            echo "LED Test-Signal (Farbe $color, Helligkeit $bright) an Instanz $ledInst gesendet.";
+        } else {
+            echo "Fehler: Keine oder ungültige LED Instanz ausgewählt!";
         }
-        echo "LED Test-Signal (Farbe $color, Helligkeit $bright, $durationSeconds Sekunden) an $count Instanz(en) gesendet.";
     }
 
-    public function TestHmIP_Siren(int $ac, int $opt, int $durationSeconds)
+    public function TestHmIP_Siren(int $sirenInst, int $ac, int $opt, int $durationSeconds)
     {
-        $sirens = json_decode($this->ReadPropertyString("TargetHmIP_Sirens"), true);
-        if (!is_array($sirens) || count($sirens) == 0) {
-            echo "Fehler: Keine Sirenen-Instanzen ausgewählt!";
-            return;
+        if ($sirenInst > 0 && IPS_InstanceExists($sirenInst)) {
+            $string = "O=$opt,A=$ac,DV=$durationSeconds,DU=0";
+            $this->SendDebug("HmIP-Siren-Test", "Sende $string an Sirenen Instanz $sirenInst", 0);
+            @HM_WriteValueString($sirenInst, 'COMBINED_PARAMETER', $string);
+            echo "Sirenen Test-Signal (A=$ac, O=$opt) an Instanz $sirenInst gesendet.";
+        } else {
+            echo "Fehler: Keine oder ungültige Sirenen Instanz ausgewählt!";
         }
-
-        $string = "O=$opt,A=$ac,DV=$durationSeconds,DU=0";
-
-        $count = 0;
-        foreach ($sirens as $s) {
-            $instId = $s['InstanceID'] ?? 0;
-            if ($instId > 0 && IPS_InstanceExists($instId)) {
-                $this->SendDebug("HmIP-Siren-Test", "Sende $string an Sirenen Instanz $instId", 0);
-                @HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
-                $count++;
-            }
-        }
-        echo "Sirenen Test-Signal (A=$ac, O=$opt, $durationSeconds Sekunden) an $count Instanz(en) gesendet.";
     }
 
     private function IsTriggered($currentVal, $triggerValStr)

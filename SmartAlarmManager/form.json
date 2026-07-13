@@ -18,7 +18,7 @@
         },
         {
             "type": "Label",
-            "caption": "Schnittstellen / Ausgabegeräte"
+            "caption": "Schnittstellen / Ausgabegeräte (Global)"
         },
         {
             "type": "SelectInstance",
@@ -44,50 +44,6 @@
             "type": "SelectInstance",
             "name": "TargetSonos",
             "caption": "Sonos / GoogleTTS Instanz"
-        },
-        {
-            "type": "SelectInstance",
-            "name": "TargetHmIP_MP3",
-            "caption": "Homematic MP3-Gong (HmIP-MP3P)"
-        },
-        {
-            "type": "List",
-            "name": "TargetHmIP_LEDs",
-            "caption": "Homematic Status-LEDs (z.B. HmIP-WRC6, BSL)",
-            "add": true,
-            "delete": true,
-            "columns": [
-                {
-                    "caption": "Instanz",
-                    "name": "InstanceID",
-                    "width": "auto",
-                    "add": 0,
-                    "edit": { "type": "SelectInstance" }
-                },
-                {
-                    "caption": "Ist MP3-Gong?",
-                    "name": "IsMP3P",
-                    "width": "120px",
-                    "add": false,
-                    "edit": { "type": "CheckBox" }
-                }
-            ]
-        },
-        {
-            "type": "List",
-            "name": "TargetHmIP_Sirens",
-            "caption": "Homematic Sirenen (z.B. HmIP-ASIR-O)",
-            "add": true,
-            "delete": true,
-            "columns": [
-                {
-                    "caption": "Instanz",
-                    "name": "InstanceID",
-                    "width": "auto",
-                    "add": 0,
-                    "edit": { "type": "SelectInstance" }
-                }
-            ]
         },
         {
             "type": "Label",
@@ -136,11 +92,11 @@
                     "edit": { "type": "CheckBox" }
                 },
                 {
-                    "caption": "MP3-Gong?",
-                    "name": "UseHmIP_MP3",
-                    "width": "80px",
-                    "add": false,
-                    "edit": { "type": "CheckBox" }
+                    "caption": "MP3-Instanz",
+                    "name": "HmIP_MP3_Inst",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": { "type": "SelectInstance" }
                 },
                 {
                     "caption": "MP3 Track(s)",
@@ -164,9 +120,16 @@
                     "edit": { "type": "NumberSpinner" }
                 },
                 {
-                    "caption": "LEDs?",
-                    "name": "UseHmIP_LED",
-                    "width": "60px",
+                    "caption": "LED-Instanz",
+                    "name": "HmIP_LED_Inst",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": { "type": "SelectInstance" }
+                },
+                {
+                    "caption": "Ist MP3P-Licht?",
+                    "name": "HmIP_LED_IsMP3P",
+                    "width": "80px",
                     "add": false,
                     "edit": { "type": "CheckBox" }
                 },
@@ -218,11 +181,11 @@
                     }
                 },
                 {
-                    "caption": "Sirene?",
-                    "name": "UseHmIP_Siren",
-                    "width": "60px",
-                    "add": false,
-                    "edit": { "type": "CheckBox" }
+                    "caption": "Sirenen-Instanz",
+                    "name": "HmIP_Siren_Inst",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": { "type": "SelectInstance" }
                 },
                 {
                     "caption": "Sirene Ton",
@@ -329,6 +292,11 @@
             "type": "RowLayout",
             "items": [
                 {
+                    "type": "SelectInstance",
+                    "name": "TestMP3Inst",
+                    "caption": "MP3 Instanz"
+                },
+                {
                     "type": "ValidationTextBox",
                     "name": "TestSoundStr",
                     "caption": "Sound Tracks (z.B. 1;2)",
@@ -348,14 +316,24 @@
                 },
                 {
                     "type": "Button",
-                    "caption": "Test MP3 Ton spielen",
-                    "onClick": "SAM_TestHmIP_MP3($id, $TestSoundStr, $TestMP3Vol, $TestMP3Rep);"
+                    "caption": "Test MP3 spielen",
+                    "onClick": "SAM_TestHmIP_MP3($id, $TestMP3Inst, $TestSoundStr, $TestMP3Vol, $TestMP3Rep);"
                 }
             ]
         },
         {
             "type": "RowLayout",
             "items": [
+                {
+                    "type": "SelectInstance",
+                    "name": "TestLEDInst",
+                    "caption": "LED Instanz"
+                },
+                {
+                    "type": "CheckBox",
+                    "name": "TestIsMP3P",
+                    "caption": "Ist MP3P?"
+                },
                 {
                     "type": "NumberSpinner",
                     "name": "TestDuration",
@@ -387,13 +365,18 @@
                 {
                     "type": "Button",
                     "caption": "Test LEDs leuchten",
-                    "onClick": "SAM_TestHmIP_LED($id, $TestColor, $TestLedBright, $TestDuration);"
+                    "onClick": "SAM_TestHmIP_LED($id, $TestLEDInst, $TestIsMP3P, $TestColor, $TestLedBright, $TestDuration);"
                 }
             ]
         },
         {
             "type": "RowLayout",
             "items": [
+                {
+                    "type": "SelectInstance",
+                    "name": "TestSirenInst",
+                    "caption": "Sirenen Instanz"
+                },
                 {
                     "type": "NumberSpinner",
                     "name": "TestSirenDuration",
@@ -424,7 +407,7 @@
                 {
                     "type": "Button",
                     "caption": "Test Sirenen auslösen",
-                    "onClick": "SAM_TestHmIP_Siren($id, $TestSirenAc, $TestSirenOpt, $TestSirenDuration);"
+                    "onClick": "SAM_TestHmIP_Siren($id, $TestSirenInst, $TestSirenAc, $TestSirenOpt, $TestSirenDuration);"
                 }
             ]
         }
