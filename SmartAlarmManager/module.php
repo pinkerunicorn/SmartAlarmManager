@@ -37,15 +37,15 @@ class SmartAlarmManager extends IPSModuleStrict
     public function ApplyChanges(): void{
         parent::ApplyChanges();
 
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('SystemStatus'), [
-            'Associations' => [
-                ['Value' => 0, 'Name' => 'Alles OK', 'Icon' => 'Ok', 'Color' => 0x00FF00],
-                ['Value' => 1, 'Name' => 'Info / Hinweis', 'Icon' => 'Information', 'Color' => 0xFFFF00],
-                ['Value' => 2, 'Name' => 'ALARM!', 'Icon' => 'Warning', 'Color' => 0xFF0000],
-                ['Value' => 3, 'Name' => 'ESKALATION', 'Icon' => 'Warning', 'Color' => 0xFF0000],
-                ['Value' => 4, 'Name' => 'VOLLALARM', 'Icon' => 'Alert', 'Color' => 0xFF0000]
-            ]
-        ]);
+        if (!IPS_VariableProfileExists('SmartAlarm.Status')) {
+            IPS_CreateVariableProfile('SmartAlarm.Status', 1);
+            IPS_SetVariableProfileAssociation('SmartAlarm.Status', 0, 'Alles OK', 'Ok', 0x00FF00);
+            IPS_SetVariableProfileAssociation('SmartAlarm.Status', 1, 'Info / Hinweis', 'Information', 0xFFFF00);
+            IPS_SetVariableProfileAssociation('SmartAlarm.Status', 2, 'ALARM!', 'Warning', 0xFF0000);
+            IPS_SetVariableProfileAssociation('SmartAlarm.Status', 3, 'ESKALATION', 'Warning', 0xFF0000);
+            IPS_SetVariableProfileAssociation('SmartAlarm.Status', 4, 'VOLLALARM', 'Alert', 0xFF0000);
+        }
+        IPS_SetVariableCustomProfile($this->GetIDForIdent('SystemStatus'), 'SmartAlarm.Status');
 
 
         // Unregister all old messages
