@@ -167,12 +167,23 @@ class SmartAlarmManager extends IPSModule
         $type = $item['AlarmType'] ?? 0;
         $msg = $item['Message'] ?? "Alarm ausgelöst";
         $vid = $item['VariableID'];
-        $profile = $this->GetActionProfile($item['ProfileID'] ?? '');
+        
+        $profileIdStr = $item['ProfileID'] ?? '';
+        $profileIds = array_map('trim', explode(',', $profileIdStr));
+        $profiles = [];
+        foreach ($profileIds as $pid) {
+            if (empty($pid)) continue;
+            $p = $this->GetActionProfile($pid);
+            if (!empty($p)) $profiles[] = $p;
+        }
 
         if ($type == 1) {
             $this->LogMessage("Info/Event ausgelöst: " . $msg, KL_NOTIFY);
             $this->SendDebug("Trigger", "Info/Event: " . $msg, 0);
-            $this->TriggerInfo($profile, $msg);
+            
+            foreach ($profiles as $profile) {
+                $this->TriggerInfo($profile, $msg);
+            }
             
             $this->SetValue("LastEvent", date("d.m.Y H:i:s") . " - " . $msg);
             if ($this->GetValue("SystemStatus") == 0) {
@@ -188,14 +199,16 @@ class SmartAlarmManager extends IPSModule
                     "timestamp" => time(),
                     "level" => 1,
                     "item" => $item,
-                    "profile" => $profile
+                    "profiles" => $profiles
                 ];
                 $this->SetBuffer("ActiveAlarms", json_encode($alarms));
                 
                 $this->LogMessage("ALARM ausgelöst (Stufe 1): " . $msg, KL_WARNING);
                 $this->SendDebug("Trigger", "Alarm Stufe 1: " . $msg, 0);
                 
-                $this->TriggerLevel1($profile, $msg);
+                foreach ($profiles as $profile) {
+                    $this->TriggerLevel1($profile, $msg);
+                }
                 
                 $ident = "Alarm_" . $vid;
                 if (@IPS_GetObjectIDByIdent($ident, $this->InstanceID)) {
@@ -220,9 +233,14 @@ class SmartAlarmManager extends IPSModule
                 $vid = substr($Ident, 6);
                 $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
                 if (isset($alarms[$vid])) {
-                    $profile = $alarms[$vid]['profile'] ?? [];
-                    $this->TriggerHomematicLEDs($profile, true); 
-                    $this->TriggerHomematicSirens($profile, true); 
+                    $profiles = $alarms[$vid]['profiles'] ?? [];
+                    if (empty($profiles) && isset($alarms[$vid]['profile'])) {
+                        $profiles = [$alarms[$vid]['profile']];
+                    }
+                    foreach ($profiles as $profile) {
+                        $this->TriggerHomematicLEDs($profile, true); 
+                        $this->TriggerHomematicSirens($profile, true); 
+                    }
                     unset($alarms[$vid]);
                     $this->SetBuffer("ActiveAlarms", json_encode($alarms));
                 }
@@ -280,14 +298,20 @@ class SmartAlarmManager extends IPSModule
         foreach ($alarms as $vid => &$alarm) {
             $elapsed = $now - $alarm['timestamp'];
             $msg = $alarm['item']['Message'] ?? "Alarm";
-            $profile = $alarm['profile'] ?? [];
+            
+            $profiles = $alarm['profiles'] ?? [];
+            if (empty($profiles) && isset($alarm['profile'])) {
+                $profiles = [$alarm['profile']];
+            }
 
             if ($alarm['level'] == 1 && $elapsed >= $lvl2_time) {
                 $alarm['level'] = 2;
                 $changed = true;
                 $this->LogMessage("Alarm ESKALATION (Stufe 2): " . $msg, KL_WARNING);
                 $this->SendDebug("Escalation", "Stufe 2: " . $msg, 0);
-                $this->TriggerLevel2($profile, $msg);
+                foreach ($profiles as $profile) {
+                    $this->TriggerLevel2($profile, $msg);
+                }
             }
 
             if ($alarm['level'] == 2 && $elapsed >= $lvl3_time) {
@@ -295,7 +319,9 @@ class SmartAlarmManager extends IPSModule
                 $changed = true;
                 $this->LogMessage("VOLLALARM (Stufe 3): " . $msg, KL_ERROR);
                 $this->SendDebug("Escalation", "Stufe 3: " . $msg, 0);
-                $this->TriggerLevel3($profile, $msg);
+                foreach ($profiles as $profile) {
+                    $this->TriggerLevel3($profile, $msg);
+                }
             }
         }
 
