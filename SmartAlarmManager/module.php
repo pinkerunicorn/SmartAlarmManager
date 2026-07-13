@@ -130,10 +130,6 @@ class SmartAlarmManager extends IPSModule
                             $this->SetTimerInterval("DelayTimer", 0);
                         }
                     }
-                    
-                    $profile = $this->GetActionProfile($item['ProfileID'] ?? '');
-                    $this->TriggerHomematicLEDs($profile, true);
-                    $this->TriggerHomematicSirens($profile, true);
                 }
             }
         }
