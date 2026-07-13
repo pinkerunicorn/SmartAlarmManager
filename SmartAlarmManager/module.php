@@ -701,49 +701,147 @@ class SmartAlarmManager extends IPSModuleStrict
 {
     "elements": [
         {
+            "type": "ExpansionPanel",
+            "caption": "⚙️ Globale Einstellungen & Eskalation",
+            "items": [
+                {
+                    "type": "RowLayout",
+                    "items": [
+                        {
+                            "type": "NumberSpinner",
+                            "name": "EscalationTimeLvl2",
+                            "caption": "Stufe 2 (Sekunden bis Email/Vestaboard)",
+                            "suffix": "s"
+                        },
+                        {
+                            "type": "NumberSpinner",
+                            "name": "EscalationTimeLvl3",
+                            "caption": "Stufe 3 (Sekunden bis Vollalarm)",
+                            "suffix": "s"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "ExpansionPanel",
+            "caption": "📢 Globale Schnittstellen / Ausgabegeräte",
+            "items": [
+                {
+                    "type": "RowLayout",
+                    "items": [
+                        {
+                            "type": "SelectInstance",
+                            "name": "TargetWebFront",
+                            "caption": "WebFront / App (für Push Notifications)"
+                        },
+                        {
+                            "type": "SelectInstance",
+                            "name": "TargetSMTP",
+                            "caption": "SMTP Instanz (für E-Mails)"
+                        },
+                        {
+                            "type": "ValidationTextBox",
+                            "name": "EmailAddress",
+                            "caption": "Empfänger E-Mail Adresse"
+                        }
+                    ]
+                },
+                {
+                    "type": "RowLayout",
+                    "items": [
+                        {
+                            "type": "SelectInstance",
+                            "name": "TargetVestaboard",
+                            "caption": "Vestaboard Instanz"
+                        },
+                        {
+                            "type": "SelectInstance",
+                            "name": "TargetSonos",
+                            "caption": "Sonos / GoogleTTS Instanz"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "type": "Label",
-            "caption": "Eskalations-Zeiten (für Alarm-Typ)"
+            "caption": "Überwachte Variablen (Sensoren / Auslöser)"
         },
         {
-            "type": "NumberSpinner",
-            "name": "EscalationTimeLvl2",
-            "caption": "Stufe 2 (Sekunden bis Email/Vestaboard)",
-            "suffix": "s"
-        },
-        {
-            "type": "NumberSpinner",
-            "name": "EscalationTimeLvl3",
-            "caption": "Stufe 3 (Sekunden bis Vollalarm)",
-            "suffix": "s"
-        },
-        {
-            "type": "Label",
-            "caption": "Schnittstellen / Ausgabegeräte (Global)"
-        },
-        {
-            "type": "SelectInstance",
-            "name": "TargetWebFront",
-            "caption": "WebFront / App (für Push Notifications)"
-        },
-        {
-            "type": "SelectInstance",
-            "name": "TargetSMTP",
-            "caption": "SMTP Instanz (für E-Mails)"
-        },
-        {
-            "type": "ValidationTextBox",
-            "name": "EmailAddress",
-            "caption": "Empfänger E-Mail Adresse"
-        },
-        {
-            "type": "SelectInstance",
-            "name": "TargetVestaboard",
-            "caption": "Vestaboard Instanz"
-        },
-        {
-            "type": "SelectInstance",
-            "name": "TargetSonos",
-            "caption": "Sonos / GoogleTTS Instanz"
+            "type": "List",
+            "name": "MonitoredVariables",
+            "caption": "Variablen",
+            "add": true,
+            "delete": true,
+            "changeOrder": true,
+            "rowCount": 15,
+            "columns": [
+                {
+                    "caption": "Sensor/Auslöser",
+                    "name": "VariableID",
+                    "width": "auto",
+                    "add": 0,
+                    "edit": {
+                        "type": "SelectVariable"
+                    }
+                },
+                {
+                    "caption": "Nachricht/Titel",
+                    "name": "Message",
+                    "width": "250px",
+                    "add": "Neuer Alarm",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "Auslöse-Wert",
+                    "name": "TriggerValue",
+                    "width": "150px",
+                    "add": "true",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                },
+                {
+                    "caption": "Verzögerung (s)",
+                    "name": "DelaySeconds",
+                    "width": "100px",
+                    "add": 0,
+                    "edit": {
+                        "type": "NumberSpinner"
+                    }
+                },
+                {
+                    "caption": "Alarm/Eskalations-Typ",
+                    "name": "AlarmType",
+                    "width": "150px",
+                    "add": 0,
+                    "edit": {
+                        "type": "Select",
+                        "options": [
+                            {
+                                "caption": "Alarm (mit Eskalation)",
+                                "value": 0
+                            },
+                            {
+                                "caption": "Info / Türklingel (Einmalig)",
+                                "value": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "caption": "Aktions-Profil (Name)",
+                    "name": "ProfileID",
+                    "width": "200px",
+                    "add": "Neues_Profil",
+                    "edit": {
+                        "type": "ValidationTextBox"
+                    }
+                }
+            ]
         },
         {
             "type": "Label",
@@ -1050,85 +1148,6 @@ class SmartAlarmManager extends IPSModuleStrict
                     }
                 }
             ]
-        },
-        {
-            "type": "Label",
-            "caption": "Überwachte Variablen"
-        },
-        {
-            "type": "List",
-            "name": "MonitoredVariables",
-            "caption": "Variablen",
-            "add": true,
-            "delete": true,
-            "changeOrder": true,
-            "rowCount": 15,
-            "columns": [
-                {
-                    "caption": "Sensor/Auslöser",
-                    "name": "VariableID",
-                    "width": "auto",
-                    "add": 0,
-                    "edit": {
-                        "type": "SelectVariable"
-                    }
-                },
-                {
-                    "caption": "Nachricht/Titel",
-                    "name": "Message",
-                    "width": "250px",
-                    "add": "Neuer Alarm",
-                    "edit": {
-                        "type": "ValidationTextBox"
-                    }
-                },
-                {
-                    "caption": "Auslöse-Wert",
-                    "name": "TriggerValue",
-                    "width": "150px",
-                    "add": "true",
-                    "edit": {
-                        "type": "ValidationTextBox"
-                    }
-                },
-                {
-                    "caption": "Verzögerung (s)",
-                    "name": "DelaySeconds",
-                    "width": "100px",
-                    "add": 0,
-                    "edit": {
-                        "type": "NumberSpinner"
-                    }
-                },
-                {
-                    "caption": "Alarm/Eskalations-Typ",
-                    "name": "AlarmType",
-                    "width": "150px",
-                    "add": 0,
-                    "edit": {
-                        "type": "Select",
-                        "options": [
-                            {
-                                "caption": "Alarm (mit Eskalation)",
-                                "value": 0
-                            },
-                            {
-                                "caption": "Info / Türklingel (Einmalig)",
-                                "value": 1
-                            }
-                        ]
-                    }
-                },
-                {
-                    "caption": "Aktions-Profil (Name)",
-                    "name": "ProfileID",
-                    "width": "200px",
-                    "add": "Neues_Profil",
-                    "edit": {
-                        "type": "ValidationTextBox"
-                    }
-                }
-            ]
         }
     ],
     "actions": [
@@ -1148,12 +1167,14 @@ class SmartAlarmManager extends IPSModuleStrict
                 {
                     "type": "Button",
                     "caption": "Profil testen (An)",
-                    "onClick": "SAM_TestProfile($id, $TestProfileID, false);"
+                    "onClick": "SAM_TestProfile($id, $TestProfileID, false);",
+                    "icon": "Play"
                 },
                 {
                     "type": "Button",
                     "caption": "Profil stoppen (Aus)",
-                    "onClick": "SAM_TestProfile($id, $TestProfileID, true);"
+                    "onClick": "SAM_TestProfile($id, $TestProfileID, true);",
+                    "icon": "Stop"
                 }
             ]
         }
