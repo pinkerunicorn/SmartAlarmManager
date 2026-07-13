@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-class SmartAlarmManager extends IPSModule
+class SmartAlarmManager extends IPSModuleStrict
 {
-    public function Create()
-    {
+    public function Create(): void{
         parent::Create();
 
         $this->RegisterPropertyString("MonitoredVariables", "[]");
@@ -42,8 +41,7 @@ class SmartAlarmManager extends IPSModule
         $this->EnableAction("AcknowledgeAll");
     }
 
-    public function ApplyChanges()
-    {
+    public function ApplyChanges(): void{
         parent::ApplyChanges();
 
         // Unregister all old messages
@@ -96,8 +94,7 @@ class SmartAlarmManager extends IPSModule
         return $matches;
     }
 
-    public function MessageSink($TimeStamp, $SenderID, $Message, $Data)
-    {
+    public function MessageSink(int $TimeStamp, int $SenderID, int $Message, array $Data): void{
         $monitored = json_decode($this->ReadPropertyString("MonitoredVariables"), true);
         if (!is_array($monitored)) return;
 
@@ -225,8 +222,7 @@ class SmartAlarmManager extends IPSModule
         }
     }
 
-    public function RequestAction($Ident, $Value)
-    {
+    public function RequestAction(string $Ident, $Value): void{
         if (strpos($Ident, "Alarm_") === 0) {
             if ($Value == false) {
                 $this->SetValue($Ident, false);
@@ -689,9 +685,10 @@ class SmartAlarmManager extends IPSModule
         return (string)$currentVal === (string)$triggerValStr;
     }
 
-    protected function LogMessage($Message, $Type)
+    protected function LogMessage(string $Message, int $Type): bool
     {
         IPS_LogMessage('SmartVillaKunterbunt', 'SmartAlarmManager: ' . $Message);
+        return true;
     }
 }
 
