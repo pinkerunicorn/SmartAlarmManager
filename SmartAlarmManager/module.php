@@ -332,15 +332,19 @@ class SmartAlarmManager extends IPSModule
 
     private function TriggerLevel1($profile, $message)
     {
+        $this->LogMessage("--- Starte Aktions-Profil Level 1 ---", KL_NOTIFY);
+        
         if ($profile['UseWebFront'] ?? false) {
             $webfront = $this->ReadPropertyInteger("TargetWebFront");
             if ($webfront > 0 && IPS_InstanceExists($webfront)) {
+                $this->LogMessage("WebFront: Sende Push & Notification", KL_NOTIFY);
                 @WFC_PushNotification($webfront, "Alarm!", $message, "", 0);
                 @WFC_SendNotification($webfront, "Alarm!", $message, "Warning", 0);
             }
         }
         
         if ($profile['UseSonos'] ?? false) {
+            $this->LogMessage("Sonos: Spiele TTS", KL_NOTIFY);
             $this->TriggerSonos($message);
         }
         
@@ -351,10 +355,13 @@ class SmartAlarmManager extends IPSModule
 
     private function TriggerLevel2($profile, $message)
     {
+        $this->LogMessage("--- Starte Aktions-Profil Level 2 (ESKALATION) ---", KL_NOTIFY);
+        
         if ($profile['UseVestaboard'] ?? false) {
             $vesta = $this->ReadPropertyInteger("TargetVestaboard");
             if ($vesta > 0 && IPS_InstanceExists($vesta)) {
                 if (function_exists('VESTA_SendMessage')) {
+                    $this->LogMessage("Vestaboard: Sende Nachricht", KL_NOTIFY);
                     @VESTA_SendMessage($vesta, "ALARM:\n" . $message);
                 }
             }
@@ -365,12 +372,14 @@ class SmartAlarmManager extends IPSModule
             $email = trim($this->ReadPropertyString("EmailAddress"));
             if ($smtp > 0 && IPS_InstanceExists($smtp)) {
                 if ($email != "") {
+                    $this->LogMessage("E-Mail: Sende Mail an $email", KL_NOTIFY);
                     @SMTP_SendMailEx($smtp, $email, "SmartHome Alarm Stufe 2", "Folgender Alarm wurde ausgelöst und noch nicht quittiert:\n\n" . $message);
                 }
             }
         }
         
         if ($profile['UseSonos'] ?? false) {
+            $this->LogMessage("Sonos: Spiele TTS", KL_NOTIFY);
             $this->TriggerSonos("Achtung, Alarm: " . $message);
         }
         
@@ -381,10 +390,13 @@ class SmartAlarmManager extends IPSModule
 
     private function TriggerLevel3($profile, $message)
     {
+        $this->LogMessage("--- Starte Aktions-Profil Level 3 (VOLLALARM) ---", KL_NOTIFY);
+        
         if ($profile['UseVestaboard'] ?? false) {
             $vesta = $this->ReadPropertyInteger("TargetVestaboard");
             if ($vesta > 0 && IPS_InstanceExists($vesta)) {
                 if (function_exists('VESTA_SendMessage')) {
+                    $this->LogMessage("Vestaboard: Sende Nachricht", KL_NOTIFY);
                     @VESTA_SendMessage($vesta, "!!! VOLLALARM !!!\n" . $message);
                 }
             }
@@ -393,12 +405,14 @@ class SmartAlarmManager extends IPSModule
         if ($profile['UseWebFront'] ?? false) {
             $webfront = $this->ReadPropertyInteger("TargetWebFront");
             if ($webfront > 0 && IPS_InstanceExists($webfront)) {
+                $this->LogMessage("WebFront: Sende Push & Notification", KL_NOTIFY);
                 @WFC_PushNotification($webfront, "VOLLALARM", $message, "", 0);
                 @WFC_SendNotification($webfront, "VOLLALARM", $message, "Alert", 0);
             }
         }
         
         if ($profile['UseSonos'] ?? false) {
+            $this->LogMessage("Sonos: Spiele TTS", KL_NOTIFY);
             $this->TriggerSonos("Vollalarm: " . $message);
         }
         
@@ -409,9 +423,12 @@ class SmartAlarmManager extends IPSModule
 
     private function TriggerInfo($profile, $message)
     {
+        $this->LogMessage("--- Starte Aktions-Profil Info/Event ---", KL_NOTIFY);
+        
         if ($profile['UseWebFront'] ?? false) {
             $webfront = $this->ReadPropertyInteger("TargetWebFront");
             if ($webfront > 0 && IPS_InstanceExists($webfront)) {
+                $this->LogMessage("WebFront: Sende Push & Notification", KL_NOTIFY);
                 @WFC_PushNotification($webfront, "Info", $message, "", 0);
                 @WFC_SendNotification($webfront, "Info", $message, "Information", 0);
             }
@@ -421,6 +438,7 @@ class SmartAlarmManager extends IPSModule
             $vesta = $this->ReadPropertyInteger("TargetVestaboard");
             if ($vesta > 0 && IPS_InstanceExists($vesta)) {
                 if (function_exists('VESTA_SendMessage')) {
+                    $this->LogMessage("Vestaboard: Sende Nachricht", KL_NOTIFY);
                     @VESTA_SendMessage($vesta, $message);
                 }
             }
@@ -431,12 +449,14 @@ class SmartAlarmManager extends IPSModule
             $email = trim($this->ReadPropertyString("EmailAddress"));
             if ($smtp > 0 && IPS_InstanceExists($smtp)) {
                 if ($email != "") {
+                    $this->LogMessage("E-Mail: Sende Mail an $email", KL_NOTIFY);
                     @SMTP_SendMailEx($smtp, $email, "SmartHome Info / Event", $message);
                 }
             }
         }
         
         if ($profile['UseSonos'] ?? false) {
+            $this->LogMessage("Sonos: Spiele TTS", KL_NOTIFY);
             $this->TriggerSonos($message);
         }
         
@@ -465,7 +485,8 @@ class SmartAlarmManager extends IPSModule
             $vol = $profile['MP3_Volume'] ?? 100;
             $rep = $profile['MP3_Repeat'] ?? 0;
             $string = "L=$vol,DU=0,DV=0,RTU=0,RTV=0,R=$rep,SL=" . $soundStr;
-            $this->SendDebug("HmIP-MP3", "Spiele Sounds $soundStr auf Instanz $mp3", 0);
+            $this->LogMessage("Homematic MP3-Gong (Instanz $mp3): Spiele Tracks '$soundStr' mit Lautstärke $vol%", KL_NOTIFY);
+            $this->SendDebug("HmIP-MP3", "Sende $string an Instanz $mp3", 0);
             @HM_WriteValueString($mp3, 'COMBINED_PARAMETER', $string);
         }
     }
@@ -482,14 +503,18 @@ class SmartAlarmManager extends IPSModule
             if ($isMP3P) {
                 if ($turnOff) {
                     $string = 'L=100,DV=10,DU=0,RTV=0,RTU=1,C=0';
+                    $this->LogMessage("Homematic MP3P-LED (Instanz $instId): Licht ausgeschaltet", KL_NOTIFY);
                 } else {
                     $string = "L=$bright,DV=31,DU=2,RTV=0,RTU=1,C=$color";
+                    $this->LogMessage("Homematic MP3P-LED (Instanz $instId): Licht an (Farbe $color, Helligkeit $bright%)", KL_NOTIFY);
                 }
             } else {
                 if ($turnOff) {
                     $string = 'L=0,DV=31,DU=2,RTV=0,RTU=0,C=0,CB=0,RTTOV=0,RTTOU=3';
+                    $this->LogMessage("Homematic LED (Instanz $instId): Licht ausgeschaltet", KL_NOTIFY);
                 } else {
                     $string = "L=$bright,DV=31,DU=2,RTV=0,RTU=0,C=$color,CB=$mode,RTTOV=0,RTTOU=3";
+                    $this->LogMessage("Homematic LED (Instanz $instId): Licht an (Farbe $color, Modus $mode, Helligkeit $bright%)", KL_NOTIFY);
                 }
             }
 
@@ -507,8 +532,10 @@ class SmartAlarmManager extends IPSModule
 
             if ($turnOff) {
                 $string = "O=0,A=0,DV=31,DU=2";
+                $this->LogMessage("Homematic Sirene (Instanz $instId): Ausgeschaltet", KL_NOTIFY);
             } else {
                 $string = "O=$opt,A=$ac,DV=31,DU=2";
+                $this->LogMessage("Homematic Sirene (Instanz $instId): Ausgelöst (Akustik $ac, Optik $opt)", KL_NOTIFY);
             }
 
             $this->SendDebug("HmIP-Siren", "Sende $string an Sirenen Instanz $instId", 0);
