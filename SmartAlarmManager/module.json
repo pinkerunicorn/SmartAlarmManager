@@ -3,13 +3,15 @@
     "name": "SmartAlarmManager",
     "type": 3,
     "vendor": "SmartAlarm",
-    "aliases": ["Smart Alarm Manager"],
+    "aliases": [
+        "Smart Alarm Manager"
+    ],
     "parentRequirements": [],
     "childRequirements": [],
     "implemented": [],
     "prefix": "SAM",
     "author": "Florian Graßinger",
-    "url": "https://github.com/pinkerunicorn/SmartAlarmManager",
+    "url": "https://github.com/pinkerunicorn/",
     "properties": {
         "MonitoredVariables": {
             "type": "string",

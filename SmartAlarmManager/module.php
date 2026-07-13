@@ -389,7 +389,11 @@ class SmartAlarmManager extends IPSModule
             if ($vesta > 0 && IPS_InstanceExists($vesta)) {
                 if (function_exists('VESTA_SendMessage')) {
                     $this->LogMessage("Vestaboard: Sende Nachricht", KL_NOTIFY);
-                    @VESTA_SendMessage($vesta, "ALARM:\n" . $message);
+                    try {
+                        VESTA_SendMessage($vesta, "ALARM:\n" . $message);
+                    } catch (Exception $e) {
+                        $this->LogMessage("Fehler beim Senden an Vestaboard: " . $e->getMessage(), KL_ERROR);
+                    }
                 }
             }
         }
@@ -400,7 +404,11 @@ class SmartAlarmManager extends IPSModule
             if ($smtp > 0 && IPS_InstanceExists($smtp)) {
                 if ($email != "") {
                     $this->LogMessage("E-Mail: Sende Mail an $email", KL_NOTIFY);
-                    @SMTP_SendMailEx($smtp, $email, "SmartHome Alarm Stufe 2", "Folgender Alarm wurde ausgelöst und noch nicht quittiert:\n\n" . $message);
+                    try {
+                        SMTP_SendMailEx($smtp, $email, "SmartHome Alarm Stufe 2", "Folgender Alarm wurde ausgelöst und noch nicht quittiert:\n\n" . $message);
+                    } catch (Exception $e) {
+                        $this->LogMessage("Fehler beim Senden der E-Mail: " . $e->getMessage(), KL_ERROR);
+                    }
                 }
             }
         }
@@ -425,7 +433,11 @@ class SmartAlarmManager extends IPSModule
             if ($vesta > 0 && IPS_InstanceExists($vesta)) {
                 if (function_exists('VESTA_SendMessage')) {
                     $this->LogMessage("Vestaboard: Sende Nachricht", KL_NOTIFY);
-                    @VESTA_SendMessage($vesta, "!!! VOLLALARM !!!\n" . $message);
+                    try {
+                        VESTA_SendMessage($vesta, "!!! VOLLALARM !!!\n" . $message);
+                    } catch (Exception $e) {
+                        $this->LogMessage("Fehler beim Senden an Vestaboard: " . $e->getMessage(), KL_ERROR);
+                    }
                 }
             }
         }
@@ -470,7 +482,11 @@ class SmartAlarmManager extends IPSModule
             if ($vesta > 0 && IPS_InstanceExists($vesta)) {
                 if (function_exists('VESTA_SendMessage')) {
                     $this->LogMessage("Vestaboard: Sende Nachricht", KL_NOTIFY);
-                    @VESTA_SendMessage($vesta, $message);
+                    try {
+                        VESTA_SendMessage($vesta, $message);
+                    } catch (Exception $e) {
+                        $this->LogMessage("Fehler beim Senden an Vestaboard: " . $e->getMessage(), KL_ERROR);
+                    }
                 }
             }
         }
@@ -481,7 +497,11 @@ class SmartAlarmManager extends IPSModule
             if ($smtp > 0 && IPS_InstanceExists($smtp)) {
                 if ($email != "") {
                     $this->LogMessage("E-Mail: Sende Mail an $email", KL_NOTIFY);
-                    @SMTP_SendMailEx($smtp, $email, "SmartHome Info / Event", $message);
+                    try {
+                        SMTP_SendMailEx($smtp, $email, "SmartHome Info / Event", $message);
+                    } catch (Exception $e) {
+                        $this->LogMessage("Fehler beim Senden der E-Mail: " . $e->getMessage(), KL_ERROR);
+                    }
                 }
             }
         }
@@ -501,10 +521,14 @@ class SmartAlarmManager extends IPSModule
     {
         $sonos = $this->ReadPropertyInteger("TargetSonos");
         if ($sonos > 0 && IPS_InstanceExists($sonos)) {
-            if (function_exists('GSTTS_PlayMessage')) {
-                @GSTTS_PlayMessage($sonos, $message);
-            } elseif (function_exists('SNS_PlayText')) {
-                @SNS_PlayText($sonos, $message);
+            try {
+                if (function_exists('GSTTS_PlayMessage')) {
+                    GSTTS_PlayMessage($sonos, $message);
+                } elseif (function_exists('SNS_PlayText')) {
+                    SNS_PlayText($sonos, $message);
+                }
+            } catch (Exception $e) {
+                $this->LogMessage("Fehler bei Sonos TTS: " . $e->getMessage(), KL_ERROR);
             }
         }
     }
@@ -525,7 +549,11 @@ class SmartAlarmManager extends IPSModule
             $string = "L=$vol,DU=0,DV=$dv,RTU=0,RTV=0,R=$rep,SL=" . $soundStr;
             $this->LogMessage("Homematic MP3-Gong (Instanz $mp3): Spiele Tracks '$soundStr' (Lautstärke $vol%, Dauer: $duration s)", KL_NOTIFY);
             $this->SendDebug("HmIP-MP3", "Sende $string an Instanz $mp3", 0);
-            @HM_WriteValueString($mp3, 'COMBINED_PARAMETER', $string);
+            try {
+                HM_WriteValueString($mp3, 'COMBINED_PARAMETER', $string);
+            } catch (Exception $e) {
+                $this->LogMessage("Fehler bei HM_WriteValueString (MP3): " . $e->getMessage(), KL_ERROR);
+            }
         }
     }
 
@@ -557,7 +585,11 @@ class SmartAlarmManager extends IPSModule
             }
 
             $this->SendDebug("HmIP-LED", "Sende $string an LED Instanz $instId", 0);
-            @HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
+            try {
+                HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
+            } catch (Exception $e) {
+                $this->LogMessage("Fehler bei HM_WriteValueString (LED): " . $e->getMessage(), KL_ERROR);
+            }
         }
     }
 
@@ -577,7 +609,11 @@ class SmartAlarmManager extends IPSModule
             }
 
             $this->SendDebug("HmIP-Siren", "Sende $string an Sirenen Instanz $instId", 0);
-            @HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
+            try {
+                HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
+            } catch (Exception $e) {
+                $this->LogMessage("Fehler bei HM_WriteValueString (Sirene): " . $e->getMessage(), KL_ERROR);
+            }
         }
     }
 
@@ -606,10 +642,14 @@ class SmartAlarmManager extends IPSModule
             }
             
             $this->LogMessage("Setze Ziel-Variable $targetId auf Wert: " . var_export($val, true), KL_NOTIFY);
-            if (HasAction($targetId)) {
-                @RequestAction($targetId, $val);
-            } else {
-                @SetValue($targetId, $val);
+            try {
+                if (HasAction($targetId)) {
+                    RequestAction($targetId, $val);
+                } else {
+                    SetValue($targetId, $val);
+                }
+            } catch (Exception $e) {
+                $this->LogMessage("Fehler beim Setzen der Ziel-Variable $targetId: " . $e->getMessage(), KL_ERROR);
             }
         }
     }
