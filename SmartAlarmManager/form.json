@@ -46,6 +46,27 @@
             "caption": "Sonos / GoogleTTS Instanz"
         },
         {
+            "type": "SelectInstance",
+            "name": "TargetHmIP_MP3",
+            "caption": "Homematic MP3-Gong (HmIP-MP3P)"
+        },
+        {
+            "type": "List",
+            "name": "TargetHmIP_LEDs",
+            "caption": "Homematic Status-LEDs (z.B. HmIP-WRC6, BSL)",
+            "add": true,
+            "delete": true,
+            "columns": [
+                {
+                    "caption": "Instanz",
+                    "name": "InstanceID",
+                    "width": "auto",
+                    "add": 0,
+                    "edit": { "type": "SelectInstance" }
+                }
+            ]
+        },
+        {
             "type": "Label",
             "caption": "Überwachte Variablen"
         },
@@ -71,14 +92,14 @@
                     "edit": { "type": "ValidationTextBox" }
                 },
                 {
-                    "caption": "Auslöse-Wert (Zustand)",
+                    "caption": "Auslöse-Wert",
                     "name": "TriggerValue",
                     "width": "150px",
                     "add": "true",
                     "edit": { "type": "ValidationTextBox" }
                 },
                 {
-                    "caption": "Verzögerung (Sek)",
+                    "caption": "Verzögerung (s)",
                     "name": "DelaySeconds",
                     "width": "120px",
                     "add": 0,
@@ -98,9 +119,9 @@
                     }
                 },
                 {
-                    "caption": "App / WebFront",
+                    "caption": "Push",
                     "name": "UseWebFront",
-                    "width": "80px",
+                    "width": "60px",
                     "add": true,
                     "edit": { "type": "CheckBox" }
                 },
@@ -114,16 +135,76 @@
                 {
                     "caption": "E-Mail",
                     "name": "UseEmail",
-                    "width": "80px",
+                    "width": "60px",
                     "add": true,
                     "edit": { "type": "CheckBox" }
                 },
                 {
-                    "caption": "Sonos TTS",
+                    "caption": "Sonos",
                     "name": "UseSonos",
-                    "width": "80px",
+                    "width": "60px",
                     "add": true,
                     "edit": { "type": "CheckBox" }
+                },
+                {
+                    "caption": "HmIP MP3",
+                    "name": "UseHmIP_MP3",
+                    "width": "80px",
+                    "add": false,
+                    "edit": { "type": "CheckBox" }
+                },
+                {
+                    "caption": "MP3 ID",
+                    "name": "HmIP_MP3_SoundID",
+                    "width": "80px",
+                    "add": 0,
+                    "edit": { "type": "NumberSpinner" }
+                },
+                {
+                    "caption": "HmIP LED",
+                    "name": "UseHmIP_LED",
+                    "width": "80px",
+                    "add": false,
+                    "edit": { "type": "CheckBox" }
+                },
+                {
+                    "caption": "LED Farbe",
+                    "name": "HmIP_LED_Color",
+                    "width": "100px",
+                    "add": 6,
+                    "edit": {
+                        "type": "Select",
+                        "options": [
+                            { "caption": "Blau", "value": 1 },
+                            { "caption": "Grün", "value": 2 },
+                            { "caption": "Türkis", "value": 3 },
+                            { "caption": "Rot", "value": 4 },
+                            { "caption": "Violett", "value": 5 },
+                            { "caption": "Gelb", "value": 6 },
+                            { "caption": "Weiß", "value": 7 }
+                        ]
+                    }
+                },
+                {
+                    "caption": "LED Modus",
+                    "name": "HmIP_LED_Mode",
+                    "width": "120px",
+                    "add": 1,
+                    "edit": {
+                        "type": "Select",
+                        "options": [
+                            { "caption": "Dauerlicht", "value": 1 },
+                            { "caption": "Blinken (L)", "value": 2 },
+                            { "caption": "Blinken (M)", "value": 3 },
+                            { "caption": "Blinken (S)", "value": 4 },
+                            { "caption": "Blitzen (L)", "value": 5 },
+                            { "caption": "Blitzen (M)", "value": 6 },
+                            { "caption": "Blitzen (S)", "value": 7 },
+                            { "caption": "Pulsieren (L)", "value": 8 },
+                            { "caption": "Pulsieren (M)", "value": 9 },
+                            { "caption": "Pulsieren (S)", "value": 10 }
+                        ]
+                    }
                 }
             ]
         }

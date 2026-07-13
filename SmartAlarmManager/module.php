@@ -15,6 +15,8 @@ class SmartAlarmManager extends IPSModule
         $this->RegisterPropertyInteger("TargetSMTP", 0);
         $this->RegisterPropertyInteger("TargetVestaboard", 0);
         $this->RegisterPropertyInteger("TargetSonos", 0);
+        $this->RegisterPropertyInteger("TargetHmIP_MP3", 0);
+        $this->RegisterPropertyString("TargetHmIP_LEDs", "[]");
         $this->RegisterPropertyString("EmailAddress", "");
         $this->RegisterTimer("EscalationTimer", 0, 'SAM_CheckEscalation($_IPS[\'TARGET\']);');
         $this->RegisterTimer("DelayTimer", 0, 'SAM_HandleDelays($_IPS[\'TARGET\']);');
@@ -118,6 +120,9 @@ class SmartAlarmManager extends IPSModule
                             $this->SetTimerInterval("DelayTimer", 0);
                         }
                     }
+                    
+                    // Also turn off LEDs if it was an Info or Alarm that just got resolved by the sensor
+                    $this->TriggerHomematicLEDs($item, true);
                 }
             }
         }
@@ -213,6 +218,7 @@ class SmartAlarmManager extends IPSModule
                 $vid = substr($Ident, 6);
                 $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
                 if (isset($alarms[$vid])) {
+                    $this->TriggerHomematicLEDs($alarms[$vid]['item'], true); // Turn off LEDs
                     unset($alarms[$vid]);
                     $this->SetBuffer("ActiveAlarms", json_encode($alarms));
                 }
@@ -230,6 +236,7 @@ class SmartAlarmManager extends IPSModule
                     if (@IPS_GetObjectIDByIdent($ident, $this->InstanceID)) {
                         $this->SetValue($ident, false);
                     }
+                    $this->TriggerHomematicLEDs($alarm['item'], true); // Turn off LEDs
                 }
                 $this->SetBuffer("ActiveAlarms", "{}");
                 $this->SetTimerInterval("EscalationTimer", 0);
@@ -319,6 +326,9 @@ class SmartAlarmManager extends IPSModule
         if ($item['UseSonos'] ?? true) {
             $this->TriggerSonos($message);
         }
+        
+        $this->TriggerHomematicMP3($item);
+        $this->TriggerHomematicLEDs($item);
     }
 
     private function TriggerLevel2($item)
@@ -357,6 +367,9 @@ class SmartAlarmManager extends IPSModule
         if ($item['UseSonos'] ?? true) {
             $this->TriggerSonos("Achtung, Alarm: " . $message);
         }
+        
+        $this->TriggerHomematicMP3($item);
+        $this->TriggerHomematicLEDs($item);
     }
 
     private function TriggerLevel3($item)
@@ -383,6 +396,9 @@ class SmartAlarmManager extends IPSModule
         if ($item['UseSonos'] ?? true) {
             $this->TriggerSonos("Vollalarm: " . $message);
         }
+        
+        $this->TriggerHomematicMP3($item);
+        $this->TriggerHomematicLEDs($item);
     }
 
     private function TriggerInfo($item)
@@ -425,6 +441,9 @@ class SmartAlarmManager extends IPSModule
         if ($item['UseSonos'] ?? true) {
             $this->TriggerSonos($message);
         }
+        
+        $this->TriggerHomematicMP3($item);
+        $this->TriggerHomematicLEDs($item);
     }
     
     private function TriggerSonos($message)
@@ -440,6 +459,44 @@ class SmartAlarmManager extends IPSModule
                 @SNS_PlayText($sonos, $message);
             } else {
                 $this->LogMessage("Sonos nicht angesteuert: Weder GSTTS_PlayMessage noch SNS_PlayText Funktion gefunden.", KL_WARNING);
+            }
+        }
+    }
+
+    private function TriggerHomematicMP3($item)
+    {
+        if (!($item['UseHmIP_MP3'] ?? false)) return;
+        
+        $mp3 = $this->ReadPropertyInteger("TargetHmIP_MP3");
+        if ($mp3 > 0 && IPS_InstanceExists($mp3)) {
+            $soundID = $item['HmIP_MP3_SoundID'] ?? 0;
+            // L=100, DU=0 (Sekunden), DV=5 (Dauer), RTU=0, RTV=0, R=0 (Repeat), SL=SoundID
+            $string = "L=100,DU=0,DV=5,RTU=0,RTV=0,R=0,SL=" . $soundID;
+            $this->SendDebug("HmIP-MP3", "Spiele Sound $soundID auf Instanz $mp3", 0);
+            @HM_WriteValueString($mp3, 'COMBINED_PARAMETER', $string);
+        }
+    }
+
+    private function TriggerHomematicLEDs($item, $turnOff = false)
+    {
+        if (!($item['UseHmIP_LED'] ?? false)) return;
+        
+        $leds = json_decode($this->ReadPropertyString("TargetHmIP_LEDs"), true);
+        if (!is_array($leds) || count($leds) == 0) return;
+
+        if ($turnOff) {
+            $string = 'L=0,DV=31,DU=2,RTV=0,RTU=0,C=0,CB=0,RTTOV=0,RTTOU=3';
+        } else {
+            $color = $item['HmIP_LED_Color'] ?? 4; 
+            $mode = $item['HmIP_LED_Mode'] ?? 1; 
+            $string = "L=100,DV=31,DU=2,RTV=0,RTU=0,C=$color,CB=$mode,RTTOV=0,RTTOU=3";
+        }
+
+        foreach ($leds as $led) {
+            $instId = $led['InstanceID'] ?? 0;
+            if ($instId > 0 && IPS_InstanceExists($instId)) {
+                $this->SendDebug("HmIP-LED", "Sende $string an LED Instanz $instId", 0);
+                @HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
             }
         }
     }
