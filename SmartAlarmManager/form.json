@@ -286,128 +286,26 @@
     "actions": [
         {
             "type": "Label",
-            "caption": "Test: Homematic MP3 / LEDs / Sirenen"
+            "caption": "Test: Aktions-Profil testen"
         },
         {
             "type": "RowLayout",
             "items": [
-                {
-                    "type": "SelectInstance",
-                    "name": "TestMP3Inst",
-                    "caption": "MP3 Instanz"
-                },
                 {
                     "type": "ValidationTextBox",
-                    "name": "TestSoundStr",
-                    "caption": "Sound Tracks (z.B. 1;2)",
-                    "value": "1"
-                },
-                {
-                    "type": "NumberSpinner",
-                    "name": "TestMP3Vol",
-                    "caption": "Lautstärke",
-                    "value": 100
-                },
-                {
-                    "type": "NumberSpinner",
-                    "name": "TestMP3Rep",
-                    "caption": "Wiederholungen",
-                    "value": 0
+                    "name": "TestProfileID",
+                    "caption": "Profil-ID (Name)",
+                    "value": "Briefkasten"
                 },
                 {
                     "type": "Button",
-                    "caption": "Test MP3 spielen",
-                    "onClick": "SAM_TestHmIP_MP3($id, $TestMP3Inst, $TestSoundStr, $TestMP3Vol, $TestMP3Rep);"
-                }
-            ]
-        },
-        {
-            "type": "RowLayout",
-            "items": [
-                {
-                    "type": "SelectInstance",
-                    "name": "TestLEDInst",
-                    "caption": "LED Instanz"
-                },
-                {
-                    "type": "CheckBox",
-                    "name": "TestIsMP3P",
-                    "caption": "Ist MP3P?"
-                },
-                {
-                    "type": "NumberSpinner",
-                    "name": "TestDuration",
-                    "caption": "Dauer (Sek)",
-                    "value": 15
-                },
-                {
-                    "type": "NumberSpinner",
-                    "name": "TestLedBright",
-                    "caption": "Helligkeit",
-                    "value": 100
-                },
-                {
-                    "type": "Select",
-                    "name": "TestColor",
-                    "caption": "Farbe",
-                    "value": 4,
-                    "options": [
-                        { "caption": "Aus", "value": 0 },
-                        { "caption": "Blau", "value": 1 },
-                        { "caption": "Grün", "value": 2 },
-                        { "caption": "Türkis", "value": 3 },
-                        { "caption": "Rot", "value": 4 },
-                        { "caption": "Violett", "value": 5 },
-                        { "caption": "Gelb", "value": 6 },
-                        { "caption": "Weiß", "value": 7 }
-                    ]
+                    "caption": "Profil testen (An)",
+                    "onClick": "SAM_TestProfile($id, $TestProfileID, false);"
                 },
                 {
                     "type": "Button",
-                    "caption": "Test LEDs leuchten",
-                    "onClick": "SAM_TestHmIP_LED($id, $TestLEDInst, $TestIsMP3P, $TestColor, $TestLedBright, $TestDuration);"
-                }
-            ]
-        },
-        {
-            "type": "RowLayout",
-            "items": [
-                {
-                    "type": "SelectInstance",
-                    "name": "TestSirenInst",
-                    "caption": "Sirenen Instanz"
-                },
-                {
-                    "type": "NumberSpinner",
-                    "name": "TestSirenDuration",
-                    "caption": "Dauer (Sek)",
-                    "value": 15
-                },
-                {
-                    "type": "Select",
-                    "name": "TestSirenAc",
-                    "caption": "Akustik",
-                    "value": 1,
-                    "options": [
-                        { "caption": "Frequenz steigend", "value": 1 },
-                        { "caption": "Frequenz fallend", "value": 2 },
-                        { "caption": "Frequenz steigen/fallend", "value": 3 }
-                    ]
-                },
-                {
-                    "type": "Select",
-                    "name": "TestSirenOpt",
-                    "caption": "Optik",
-                    "value": 1,
-                    "options": [
-                        { "caption": "Blinken", "value": 1 },
-                        { "caption": "Blitzen", "value": 2 }
-                    ]
-                },
-                {
-                    "type": "Button",
-                    "caption": "Test Sirenen auslösen",
-                    "onClick": "SAM_TestHmIP_Siren($id, $TestSirenInst, $TestSirenAc, $TestSirenOpt, $TestSirenDuration);"
+                    "caption": "Profil stoppen (Aus)",
+                    "onClick": "SAM_TestProfile($id, $TestProfileID, true);"
                 }
             ]
         }

@@ -244,10 +244,17 @@ class SmartAlarmManager extends IPSModule
                     if (@IPS_GetObjectIDByIdent($ident, $this->InstanceID)) {
                         $this->SetValue($ident, false);
                     }
-                    $profile = $alarm['profile'] ?? [];
-                    $this->TriggerHomematicLEDs($profile, true); 
-                    $this->TriggerHomematicSirens($profile, true); 
                 }
+                
+                // Turn off ALL configured devices in ALL profiles to be safe (and to clear tests)
+                $profiles = json_decode($this->ReadPropertyString("ActionProfiles"), true);
+                if (is_array($profiles)) {
+                    foreach ($profiles as $profile) {
+                        $this->TriggerHomematicLEDs($profile, true); 
+                        $this->TriggerHomematicSirens($profile, true); 
+                    }
+                }
+                
                 $this->SetBuffer("ActiveAlarms", "{}");
                 $this->SetTimerInterval("EscalationTimer", 0);
                 $this->UpdateStatusVariables();
@@ -509,44 +516,24 @@ class SmartAlarmManager extends IPSModule
         }
     }
 
-    public function TestHmIP_MP3(int $mp3Inst, string $soundStr, int $vol, int $rep)
+    public function TestProfile(string $profileID, bool $turnOff)
     {
-        if ($mp3Inst > 0 && IPS_InstanceExists($mp3Inst)) {
-            $string = "L=$vol,DU=0,DV=0,RTU=0,RTV=0,R=$rep,SL=" . $soundStr;
-            $this->SendDebug("HmIP-MP3-Test", "Spiele Sounds $soundStr auf Instanz $mp3Inst", 0);
-            @HM_WriteValueString($mp3Inst, 'COMBINED_PARAMETER', $string);
-            echo "Sound $soundStr wurde an Instanz $mp3Inst gesendet.";
-        } else {
-            echo "Fehler: Keine oder ungültige MP3-Gong Instanz ausgewählt!";
+        $profile = $this->GetActionProfile($profileID);
+        if (empty($profile)) {
+            echo "Fehler: Profil '$profileID' nicht gefunden!";
+            return;
         }
-    }
 
-    public function TestHmIP_LED(int $ledInst, bool $isMP3P, int $color, int $bright, int $durationSeconds)
-    {
-        if ($ledInst > 0 && IPS_InstanceExists($ledInst)) {
-            if ($isMP3P) {
-                $string = "L=$bright,DV=$durationSeconds,DU=0,RTV=0,RTU=1,C=$color";
-            } else {
-                $string = "L=$bright,DV=$durationSeconds,DU=0,RTV=0,RTU=0,C=$color,CB=1,RTTOV=0,RTTOU=3";
-            }
-            
-            $this->SendDebug("HmIP-LED-Test", "Sende $string an LED Instanz $ledInst", 0);
-            @HM_WriteValueString($ledInst, 'COMBINED_PARAMETER', $string);
-            echo "LED Test-Signal (Farbe $color, Helligkeit $bright) an Instanz $ledInst gesendet.";
+        if ($turnOff) {
+            $this->SendDebug("Test", "Stoppe Profil: " . $profileID, 0);
+            $this->TriggerHomematicLEDs($profile, true);
+            $this->TriggerHomematicSirens($profile, true);
+            echo "Profil '$profileID' gestoppt (LEDs & Sirenen Aus).";
         } else {
-            echo "Fehler: Keine oder ungültige LED Instanz ausgewählt!";
-        }
-    }
-
-    public function TestHmIP_Siren(int $sirenInst, int $ac, int $opt, int $durationSeconds)
-    {
-        if ($sirenInst > 0 && IPS_InstanceExists($sirenInst)) {
-            $string = "O=$opt,A=$ac,DV=$durationSeconds,DU=0";
-            $this->SendDebug("HmIP-Siren-Test", "Sende $string an Sirenen Instanz $sirenInst", 0);
-            @HM_WriteValueString($sirenInst, 'COMBINED_PARAMETER', $string);
-            echo "Sirenen Test-Signal (A=$ac, O=$opt) an Instanz $sirenInst gesendet.";
-        } else {
-            echo "Fehler: Keine oder ungültige Sirenen Instanz ausgewählt!";
+            $msg = "TEST-ALARM für Profil: " . $profileID;
+            $this->SendDebug("Test", "Teste Profil: " . $profileID, 0);
+            $this->TriggerInfo($profile, $msg);
+            echo "Profil '$profileID' getestet (Signale an alle konfigurierten Geräte gesendet).";
         }
     }
 
