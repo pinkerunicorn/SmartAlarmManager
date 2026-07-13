@@ -55,7 +55,7 @@
             "caption": "Profile",
             "add": true,
             "delete": true,
-            "sort": true,
+            "changeOrder": true,
             "columns": [
                 {
                     "caption": "Profil-ID (Name)",
@@ -232,7 +232,7 @@
             "caption": "Variablen",
             "add": true,
             "delete": true,
-            "sort": true,
+            "changeOrder": true,
             "columns": [
                 {
                     "caption": "Sensor/Auslöser",
