@@ -38,12 +38,12 @@ class SmartAlarmManager extends IPSModuleStrict
         parent::ApplyChanges();
 
         IPS_SetVariableCustomPresentation($this->GetIDForIdent('SystemStatus'), [
-            'ASSOCIATIONS' => [
-                ['VALUE' => 0, 'NAME' => 'Alles OK', 'ICON' => 'Ok', 'COLOR' => 0x00FF00],
-                ['VALUE' => 1, 'NAME' => 'Info / Hinweis', 'ICON' => 'Information', 'COLOR' => 0xFFFF00],
-                ['VALUE' => 2, 'NAME' => 'ALARM!', 'ICON' => 'Warning', 'COLOR' => 0xFF0000],
-                ['VALUE' => 3, 'NAME' => 'ESKALATION', 'ICON' => 'Warning', 'COLOR' => 0xFF0000],
-                ['VALUE' => 4, 'NAME' => 'VOLLALARM', 'ICON' => 'Alert', 'COLOR' => 0xFF0000]
+            'Associations' => [
+                ['Value' => 0, 'Name' => 'Alles OK', 'Icon' => 'Ok', 'Color' => 0x00FF00],
+                ['Value' => 1, 'Name' => 'Info / Hinweis', 'Icon' => 'Information', 'Color' => 0xFFFF00],
+                ['Value' => 2, 'Name' => 'ALARM!', 'Icon' => 'Warning', 'Color' => 0xFF0000],
+                ['Value' => 3, 'Name' => 'ESKALATION', 'Icon' => 'Warning', 'Color' => 0xFF0000],
+                ['Value' => 4, 'Name' => 'VOLLALARM', 'Icon' => 'Alert', 'Color' => 0xFF0000]
             ]
         ]);
 
