@@ -332,7 +332,7 @@ class SmartAlarmManager extends IPSModule
 
     private function TriggerLevel1($profile, $message)
     {
-        if ($profile['UseWebFront'] ?? true) {
+        if ($profile['UseWebFront'] ?? false) {
             $webfront = $this->ReadPropertyInteger("TargetWebFront");
             if ($webfront > 0 && IPS_InstanceExists($webfront)) {
                 @WFC_PushNotification($webfront, "Alarm!", $message, "", 0);
@@ -340,7 +340,7 @@ class SmartAlarmManager extends IPSModule
             }
         }
         
-        if ($profile['UseSonos'] ?? true) {
+        if ($profile['UseSonos'] ?? false) {
             $this->TriggerSonos($message);
         }
         
@@ -351,7 +351,7 @@ class SmartAlarmManager extends IPSModule
 
     private function TriggerLevel2($profile, $message)
     {
-        if ($profile['UseVestaboard'] ?? true) {
+        if ($profile['UseVestaboard'] ?? false) {
             $vesta = $this->ReadPropertyInteger("TargetVestaboard");
             if ($vesta > 0 && IPS_InstanceExists($vesta)) {
                 if (function_exists('VESTA_SendMessage')) {
@@ -360,7 +360,7 @@ class SmartAlarmManager extends IPSModule
             }
         }
 
-        if ($profile['UseEmail'] ?? true) {
+        if ($profile['UseEmail'] ?? false) {
             $smtp = $this->ReadPropertyInteger("TargetSMTP");
             $email = trim($this->ReadPropertyString("EmailAddress"));
             if ($smtp > 0 && IPS_InstanceExists($smtp)) {
@@ -370,7 +370,7 @@ class SmartAlarmManager extends IPSModule
             }
         }
         
-        if ($profile['UseSonos'] ?? true) {
+        if ($profile['UseSonos'] ?? false) {
             $this->TriggerSonos("Achtung, Alarm: " . $message);
         }
         
@@ -381,7 +381,7 @@ class SmartAlarmManager extends IPSModule
 
     private function TriggerLevel3($profile, $message)
     {
-        if ($profile['UseVestaboard'] ?? true) {
+        if ($profile['UseVestaboard'] ?? false) {
             $vesta = $this->ReadPropertyInteger("TargetVestaboard");
             if ($vesta > 0 && IPS_InstanceExists($vesta)) {
                 if (function_exists('VESTA_SendMessage')) {
@@ -390,7 +390,7 @@ class SmartAlarmManager extends IPSModule
             }
         }
         
-        if ($profile['UseWebFront'] ?? true) {
+        if ($profile['UseWebFront'] ?? false) {
             $webfront = $this->ReadPropertyInteger("TargetWebFront");
             if ($webfront > 0 && IPS_InstanceExists($webfront)) {
                 @WFC_PushNotification($webfront, "VOLLALARM", $message, "", 0);
@@ -398,7 +398,7 @@ class SmartAlarmManager extends IPSModule
             }
         }
         
-        if ($profile['UseSonos'] ?? true) {
+        if ($profile['UseSonos'] ?? false) {
             $this->TriggerSonos("Vollalarm: " . $message);
         }
         
@@ -409,7 +409,7 @@ class SmartAlarmManager extends IPSModule
 
     private function TriggerInfo($profile, $message)
     {
-        if ($profile['UseWebFront'] ?? true) {
+        if ($profile['UseWebFront'] ?? false) {
             $webfront = $this->ReadPropertyInteger("TargetWebFront");
             if ($webfront > 0 && IPS_InstanceExists($webfront)) {
                 @WFC_PushNotification($webfront, "Info", $message, "", 0);
@@ -417,7 +417,7 @@ class SmartAlarmManager extends IPSModule
             }
         }
         
-        if ($profile['UseVestaboard'] ?? true) {
+        if ($profile['UseVestaboard'] ?? false) {
             $vesta = $this->ReadPropertyInteger("TargetVestaboard");
             if ($vesta > 0 && IPS_InstanceExists($vesta)) {
                 if (function_exists('VESTA_SendMessage')) {
@@ -426,7 +426,7 @@ class SmartAlarmManager extends IPSModule
             }
         }
         
-        if ($profile['UseEmail'] ?? true) {
+        if ($profile['UseEmail'] ?? false) {
             $smtp = $this->ReadPropertyInteger("TargetSMTP");
             $email = trim($this->ReadPropertyString("EmailAddress"));
             if ($smtp > 0 && IPS_InstanceExists($smtp)) {
@@ -436,7 +436,7 @@ class SmartAlarmManager extends IPSModule
             }
         }
         
-        if ($profile['UseSonos'] ?? true) {
+        if ($profile['UseSonos'] ?? false) {
             $this->TriggerSonos($message);
         }
         
