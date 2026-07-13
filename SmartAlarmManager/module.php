@@ -488,9 +488,9 @@ class SmartAlarmManager extends IPSModule
             $vol = $profile['MP3_Volume'] ?? 100;
             $duration = $profile['MP3_Duration'] ?? 0;
             
-            // Wenn Dauer angegeben, dann DU=0 (Sekunden) und DV=Dauer, R=255 (unendlich)
+            // Wenn Dauer angegeben, dann DU=0 (Sekunden) und DV=Dauer, R=0 (Keine Wiederholung)
             // Wenn keine Dauer (0), dann nur 1x abspielen
-            $rep = ($duration > 0) ? 255 : 0;
+            $rep = 0;
             $dv = ($duration > 0) ? $duration : 0;
             
             $string = "L=$vol,DU=0,DV=$dv,RTU=0,RTV=0,R=$rep,SL=" . $soundStr;
