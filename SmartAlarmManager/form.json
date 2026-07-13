@@ -257,7 +257,7 @@
                 {
                     "type": "Button",
                     "caption": "Test LEDs leuchten",
-                    "onClick": "SAM_TestHmIP_LED($id, clone $TestColor, clone $TestDuration);"
+                    "onClick": "SAM_TestHmIP_LED($id, $TestColor, $TestDuration);"
                 }
             ]
         }
