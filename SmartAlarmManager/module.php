@@ -82,17 +82,18 @@ class SmartAlarmManager extends IPSModule
         }
     }
 
-    private function GetActionProfile($profileID)
+    private function GetActionProfiles($profileID)
     {
+        $matches = [];
         $profiles = json_decode($this->ReadPropertyString("ActionProfiles"), true);
         if (is_array($profiles)) {
             foreach ($profiles as $p) {
                 if (($p['ProfileID'] ?? '') === $profileID) {
-                    return $p;
+                    $matches[] = $p;
                 }
             }
         }
-        return [];
+        return $matches;
     }
 
     public function MessageSink($TimeStamp, $SenderID, $Message, $Data)
@@ -173,8 +174,10 @@ class SmartAlarmManager extends IPSModule
         $profiles = [];
         foreach ($profileIds as $pid) {
             if (empty($pid)) continue;
-            $p = $this->GetActionProfile($pid);
-            if (!empty($p)) $profiles[] = $p;
+            $matchedProfiles = $this->GetActionProfiles($pid);
+            foreach ($matchedProfiles as $p) {
+                $profiles[] = $p;
+            }
         }
 
         if ($type == 1) {
@@ -613,22 +616,26 @@ class SmartAlarmManager extends IPSModule
 
     public function TestProfile(string $profileID, bool $turnOff)
     {
-        $profile = $this->GetActionProfile($profileID);
-        if (empty($profile)) {
-            echo "Fehler: Profil '$profileID' nicht gefunden!";
+        $profiles = $this->GetActionProfiles($profileID);
+        if (empty($profiles)) {
+            echo "Fehler: Profil(e) '$profileID' nicht gefunden!";
             return;
         }
 
         if ($turnOff) {
-            $this->SendDebug("Test", "Stoppe Profil: " . $profileID, 0);
-            $this->TriggerHomematicLEDs($profile, true);
-            $this->TriggerHomematicSirens($profile, true);
-            echo "Profil '$profileID' gestoppt (LEDs & Sirenen Aus).";
+            $this->SendDebug("Test", "Stoppe Profile: " . $profileID, 0);
+            foreach ($profiles as $profile) {
+                $this->TriggerHomematicLEDs($profile, true);
+                $this->TriggerHomematicSirens($profile, true);
+            }
+            echo "Profile '$profileID' gestoppt (LEDs & Sirenen Aus).";
         } else {
             $msg = "TEST-ALARM für Profil: " . $profileID;
-            $this->SendDebug("Test", "Teste Profil: " . $profileID, 0);
-            $this->TriggerInfo($profile, $msg);
-            echo "Profil '$profileID' getestet (Signale an alle konfigurierten Geräte gesendet).";
+            $this->SendDebug("Test", "Teste Profile: " . $profileID, 0);
+            foreach ($profiles as $profile) {
+                $this->TriggerInfo($profile, $msg);
+            }
+            echo "Profile '$profileID' getestet (Signale gesendet).";
         }
     }
 
