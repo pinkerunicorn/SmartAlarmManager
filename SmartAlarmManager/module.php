@@ -505,11 +505,11 @@ class SmartAlarmManager extends IPSModule
             
             if ($isMP3P) {
                 if ($turnOff) {
-                    $string = 'L=100,DV=10,DU=0,RTV=0,RTU=1,C=0';
+                    $string = 'L=100,DV=10,DU=0,RTV=0,RTU=1,C=0,CB=0';
                     $this->LogMessage("Homematic MP3P-LED (Instanz $instId): Licht ausgeschaltet", KL_NOTIFY);
                 } else {
-                    $string = "L=$bright,DV=31,DU=2,RTV=0,RTU=1,C=$color";
-                    $this->LogMessage("Homematic MP3P-LED (Instanz $instId): Licht an (Farbe $color, Helligkeit $bright%)", KL_NOTIFY);
+                    $string = "L=$bright,DV=31,DU=2,RTV=0,RTU=1,C=$color,CB=$mode";
+                    $this->LogMessage("Homematic MP3P-LED (Instanz $instId): Licht an (Farbe $color, Modus $mode, Helligkeit $bright%)", KL_NOTIFY);
                 }
             } else {
                 if ($turnOff) {
