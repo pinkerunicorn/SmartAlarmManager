@@ -688,4 +688,10 @@ class SmartAlarmManager extends IPSModule
         }
         return (string)$currentVal === (string)$triggerValStr;
     }
+
+    protected function LogMessage($Message, $KL_MESSAGE = KL_MESSAGE)
+    {
+        IPS_LogMessage('SmartVillaKunterbunt', 'SmartAlarmManager: ' . $Message);
+    }
 }
+
