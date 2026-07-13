@@ -348,6 +348,7 @@ class SmartAlarmManager extends IPSModule
         $this->TriggerHomematicMP3($profile);
         $this->TriggerHomematicLEDs($profile);
         $this->TriggerHomematicSirens($profile);
+        $this->TriggerTargetVariable($profile);
     }
 
     private function TriggerLevel2($profile, $message)
@@ -383,6 +384,7 @@ class SmartAlarmManager extends IPSModule
         $this->TriggerHomematicMP3($profile);
         $this->TriggerHomematicLEDs($profile);
         $this->TriggerHomematicSirens($profile);
+        $this->TriggerTargetVariable($profile);
     }
 
     private function TriggerLevel3($profile, $message)
@@ -417,6 +419,7 @@ class SmartAlarmManager extends IPSModule
         $this->TriggerHomematicMP3($profile);
         $this->TriggerHomematicLEDs($profile);
         $this->TriggerHomematicSirens($profile);
+        $this->TriggerTargetVariable($profile);
     }
 
     private function TriggerInfo($profile, $message)
@@ -462,6 +465,7 @@ class SmartAlarmManager extends IPSModule
         $this->TriggerHomematicMP3($profile);
         $this->TriggerHomematicLEDs($profile);
         $this->TriggerHomematicSirens($profile);
+        $this->TriggerTargetVariable($profile);
     }
     
     private function TriggerSonos($message)
@@ -545,6 +549,39 @@ class SmartAlarmManager extends IPSModule
 
             $this->SendDebug("HmIP-Siren", "Sende $string an Sirenen Instanz $instId", 0);
             @HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
+        }
+    }
+
+    private function TriggerTargetVariable($profile)
+    {
+        $targetId = $profile['TargetVariableID'] ?? 0;
+        if ($targetId > 0 && IPS_VariableExists($targetId)) {
+            $targetValueStr = $profile['TargetVariableValue'] ?? "";
+            $var = IPS_GetVariable($targetId);
+            
+            switch($var['VariableType']) {
+                case 0: // Boolean
+                    $targetValueStr = strtolower(trim((string)$targetValueStr));
+                    $val = ($targetValueStr === 'true' || $targetValueStr === '1' || $targetValueStr === 'wahr');
+                    break;
+                case 1: // Integer
+                    $val = (int)$targetValueStr;
+                    break;
+                case 2: // Float
+                    $val = (float)str_replace(',', '.', $targetValueStr);
+                    break;
+                case 3: // String
+                default:
+                    $val = (string)$targetValueStr;
+                    break;
+            }
+            
+            $this->LogMessage("Setze Ziel-Variable $targetId auf Wert: " . var_export($val, true), KL_NOTIFY);
+            if (HasAction($targetId)) {
+                @RequestAction($targetId, $val);
+            } else {
+                @SetValue($targetId, $val);
+            }
         }
     }
 

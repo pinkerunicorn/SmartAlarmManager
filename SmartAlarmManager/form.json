@@ -219,6 +219,20 @@
                             { "caption": "Blitzen", "value": 2 }
                         ]
                     }
+                },
+                {
+                    "caption": "Ziel-Variable",
+                    "name": "TargetVariableID",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": { "type": "SelectVariable" }
+                },
+                {
+                    "caption": "Ziel-Wert",
+                    "name": "TargetVariableValue",
+                    "width": "100px",
+                    "add": "",
+                    "edit": { "type": "ValidationTextBox" }
                 }
             ]
         },
