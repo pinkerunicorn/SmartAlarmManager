@@ -63,6 +63,13 @@
                     "width": "auto",
                     "add": 0,
                     "edit": { "type": "SelectInstance" }
+                },
+                {
+                    "caption": "Ist MP3-Gong?",
+                    "name": "IsMP3P",
+                    "width": "120px",
+                    "add": false,
+                    "edit": { "type": "CheckBox" }
                 }
             ]
         },

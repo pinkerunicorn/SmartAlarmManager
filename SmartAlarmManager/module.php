@@ -484,17 +484,28 @@ class SmartAlarmManager extends IPSModule
         $leds = json_decode($this->ReadPropertyString("TargetHmIP_LEDs"), true);
         if (!is_array($leds) || count($leds) == 0) return;
 
-        if ($turnOff) {
-            $string = 'L=0,DV=31,DU=2,RTV=0,RTU=0,C=0,CB=0,RTTOV=0,RTTOU=3';
-        } else {
-            $color = $item['HmIP_LED_Color'] ?? 4; 
-            $mode = $item['HmIP_LED_Mode'] ?? 1; 
-            $string = "L=100,DV=31,DU=2,RTV=0,RTU=0,C=$color,CB=$mode,RTTOV=0,RTTOU=3";
-        }
+        $color = $item['HmIP_LED_Color'] ?? 4; 
+        $mode = $item['HmIP_LED_Mode'] ?? 1; 
 
         foreach ($leds as $led) {
             $instId = $led['InstanceID'] ?? 0;
             if ($instId > 0 && IPS_InstanceExists($instId)) {
+                $isMP3P = $led['IsMP3P'] ?? false;
+                
+                if ($isMP3P) {
+                    if ($turnOff) {
+                        $string = 'L=100,DV=10,DU=0,RTV=0,RTU=1,C=0';
+                    } else {
+                        $string = "L=100,DV=31,DU=2,RTV=0,RTU=1,C=$color";
+                    }
+                } else {
+                    if ($turnOff) {
+                        $string = 'L=0,DV=31,DU=2,RTV=0,RTU=0,C=0,CB=0,RTTOV=0,RTTOU=3';
+                    } else {
+                        $string = "L=100,DV=31,DU=2,RTV=0,RTU=0,C=$color,CB=$mode,RTTOV=0,RTTOU=3";
+                    }
+                }
+
                 $this->SendDebug("HmIP-LED", "Sende $string an LED Instanz $instId", 0);
                 @HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
             }
@@ -522,12 +533,18 @@ class SmartAlarmManager extends IPSModule
             return;
         }
 
-        $string = "L=100,DV=$durationSeconds,DU=0,RTV=0,RTU=0,C=$color,CB=1,RTTOV=0,RTTOU=3";
-        
         $count = 0;
         foreach ($leds as $led) {
             $instId = $led['InstanceID'] ?? 0;
             if ($instId > 0 && IPS_InstanceExists($instId)) {
+                $isMP3P = $led['IsMP3P'] ?? false;
+                
+                if ($isMP3P) {
+                    $string = "L=100,DV=$durationSeconds,DU=0,RTV=0,RTU=1,C=$color";
+                } else {
+                    $string = "L=100,DV=$durationSeconds,DU=0,RTV=0,RTU=0,C=$color,CB=1,RTTOV=0,RTTOU=3";
+                }
+                
                 $this->SendDebug("HmIP-LED-Test", "Sende $string an LED Instanz $instId", 0);
                 @HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
                 $count++;
