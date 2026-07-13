@@ -335,17 +335,11 @@ class SmartAlarmManager extends IPSModule
         $this->LogMessage("--- Starte Aktions-Profil Level 1 ---", KL_NOTIFY);
         
         if ($profile['UseWebFront'] ?? false) {
-            $webfront = $this->ReadPropertyInteger("TargetWebFront");
-            if ($webfront > 0 && IPS_InstanceExists($webfront)) {
-                $this->LogMessage("App/WebFront: Sende Push & Notification", KL_NOTIFY);
+            $visu = $this->ReadPropertyInteger("TargetWebFront");
+            if ($visu > 0 && IPS_InstanceExists($visu)) {
+                $this->LogMessage("App/Visu: Sende Push & Notification", KL_NOTIFY);
                 if (function_exists('VISU_PostNotification')) {
-                    @VISU_PostNotification($webfront, "Alarm!", $message, "Warning", "");
-                }
-                if (function_exists('WFC_PushNotification')) {
-                    @WFC_PushNotification($webfront, "Alarm!", $message, "", 0);
-                }
-                if (function_exists('WFC_SendNotification')) {
-                    @WFC_SendNotification($webfront, "Alarm!", $message, "Warning", 0);
+                    @VISU_PostNotification($visu, "Alarm!", $message, "Warning", "");
                 }
             }
         }
@@ -410,17 +404,11 @@ class SmartAlarmManager extends IPSModule
         }
         
         if ($profile['UseWebFront'] ?? false) {
-            $webfront = $this->ReadPropertyInteger("TargetWebFront");
-            if ($webfront > 0 && IPS_InstanceExists($webfront)) {
-                $this->LogMessage("App/WebFront: Sende Push & Notification", KL_NOTIFY);
+            $visu = $this->ReadPropertyInteger("TargetWebFront");
+            if ($visu > 0 && IPS_InstanceExists($visu)) {
+                $this->LogMessage("App/Visu: Sende Push & Notification", KL_NOTIFY);
                 if (function_exists('VISU_PostNotification')) {
-                    @VISU_PostNotification($webfront, "VOLLALARM", $message, "Alert", "Alarm");
-                }
-                if (function_exists('WFC_PushNotification')) {
-                    @WFC_PushNotification($webfront, "VOLLALARM", $message, "", 0);
-                }
-                if (function_exists('WFC_SendNotification')) {
-                    @WFC_SendNotification($webfront, "VOLLALARM", $message, "Alert", 0);
+                    @VISU_PostNotification($visu, "VOLLALARM", $message, "Alert", "Alarm");
                 }
             }
         }
@@ -440,17 +428,11 @@ class SmartAlarmManager extends IPSModule
         $this->LogMessage("--- Starte Aktions-Profil Info/Event ---", KL_NOTIFY);
         
         if ($profile['UseWebFront'] ?? false) {
-            $webfront = $this->ReadPropertyInteger("TargetWebFront");
-            if ($webfront > 0 && IPS_InstanceExists($webfront)) {
-                $this->LogMessage("App/WebFront: Sende Push & Notification", KL_NOTIFY);
+            $visu = $this->ReadPropertyInteger("TargetWebFront");
+            if ($visu > 0 && IPS_InstanceExists($visu)) {
+                $this->LogMessage("App/Visu: Sende Push & Notification", KL_NOTIFY);
                 if (function_exists('VISU_PostNotification')) {
-                    @VISU_PostNotification($webfront, "Info", $message, "Information", "");
-                }
-                if (function_exists('WFC_PushNotification')) {
-                    @WFC_PushNotification($webfront, "Info", $message, "", 0);
-                }
-                if (function_exists('WFC_SendNotification')) {
-                    @WFC_SendNotification($webfront, "Info", $message, "Information", 0);
+                    @VISU_PostNotification($visu, "Info", $message, "Information", "");
                 }
             }
         }
