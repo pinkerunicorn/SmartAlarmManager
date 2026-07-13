@@ -208,5 +208,58 @@
                 }
             ]
         }
+    ],
+    "actions": [
+        {
+            "type": "Label",
+            "caption": "Test: Homematic MP3 / LEDs"
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "type": "NumberSpinner",
+                    "name": "TestSoundID",
+                    "caption": "Sound ID"
+                },
+                {
+                    "type": "Button",
+                    "caption": "Test MP3 Ton spielen",
+                    "onClick": "SAM_TestHmIP_MP3($id, $TestSoundID);"
+                }
+            ]
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "type": "NumberSpinner",
+                    "name": "TestDuration",
+                    "caption": "Dauer (Sek)",
+                    "value": 15
+                },
+                {
+                    "type": "Select",
+                    "name": "TestColor",
+                    "caption": "Farbe",
+                    "value": 6,
+                    "options": [
+                        { "caption": "Aus", "value": 0 },
+                        { "caption": "Blau", "value": 1 },
+                        { "caption": "Grün", "value": 2 },
+                        { "caption": "Türkis", "value": 3 },
+                        { "caption": "Rot", "value": 4 },
+                        { "caption": "Violett", "value": 5 },
+                        { "caption": "Gelb", "value": 6 },
+                        { "caption": "Weiß", "value": 7 }
+                    ]
+                },
+                {
+                    "type": "Button",
+                    "caption": "Test LEDs leuchten",
+                    "onClick": "SAM_TestHmIP_LED($id, clone $TestColor, clone $TestDuration);"
+                }
+            ]
+        }
     ]
 }

@@ -501,6 +501,41 @@ class SmartAlarmManager extends IPSModule
         }
     }
 
+    public function TestHmIP_MP3(int $soundID)
+    {
+        $mp3 = $this->ReadPropertyInteger("TargetHmIP_MP3");
+        if ($mp3 > 0 && IPS_InstanceExists($mp3)) {
+            $string = "L=100,DU=0,DV=5,RTU=0,RTV=0,R=0,SL=" . $soundID;
+            $this->SendDebug("HmIP-MP3-Test", "Spiele Sound $soundID auf Instanz $mp3", 0);
+            @HM_WriteValueString($mp3, 'COMBINED_PARAMETER', $string);
+            echo "Sound $soundID wurde an Instanz $mp3 gesendet.";
+        } else {
+            echo "Fehler: Keine gültige MP3-Gong Instanz ausgewählt!";
+        }
+    }
+
+    public function TestHmIP_LED(int $color, int $durationSeconds)
+    {
+        $leds = json_decode($this->ReadPropertyString("TargetHmIP_LEDs"), true);
+        if (!is_array($leds) || count($leds) == 0) {
+            echo "Fehler: Keine LED-Instanzen ausgewählt!";
+            return;
+        }
+
+        $string = "L=100,DV=$durationSeconds,DU=0,RTV=0,RTU=0,C=$color,CB=1,RTTOV=0,RTTOU=3";
+        
+        $count = 0;
+        foreach ($leds as $led) {
+            $instId = $led['InstanceID'] ?? 0;
+            if ($instId > 0 && IPS_InstanceExists($instId)) {
+                $this->SendDebug("HmIP-LED-Test", "Sende $string an LED Instanz $instId", 0);
+                @HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
+                $count++;
+            }
+        }
+        echo "LED Test-Signal (Farbe $color, $durationSeconds Sekunden) an $count Instanz(en) gesendet.";
+    }
+
     private function IsTriggered($currentVal, $triggerValStr)
     {
         if (is_bool($currentVal)) {
