@@ -9,6 +9,7 @@ class SmartAlarmManager extends IPSModule
         parent::Create();
 
         $this->RegisterPropertyString("MonitoredVariables", "[]");
+        $this->RegisterPropertyString("ActionProfiles", "[]");
         $this->RegisterPropertyInteger("EscalationTimeLvl2", 300);
         $this->RegisterPropertyInteger("EscalationTimeLvl3", 900);
         $this->RegisterPropertyInteger("TargetWebFront", 0);
@@ -17,6 +18,7 @@ class SmartAlarmManager extends IPSModule
         $this->RegisterPropertyInteger("TargetSonos", 0);
         $this->RegisterPropertyInteger("TargetHmIP_MP3", 0);
         $this->RegisterPropertyString("TargetHmIP_LEDs", "[]");
+        $this->RegisterPropertyString("TargetHmIP_Sirens", "[]");
         $this->RegisterPropertyString("EmailAddress", "");
         $this->RegisterTimer("EscalationTimer", 0, 'SAM_CheckEscalation($_IPS[\'TARGET\']);');
         $this->RegisterTimer("DelayTimer", 0, 'SAM_HandleDelays($_IPS[\'TARGET\']);');
@@ -84,6 +86,19 @@ class SmartAlarmManager extends IPSModule
         }
     }
 
+    private function GetActionProfile($profileID)
+    {
+        $profiles = json_decode($this->ReadPropertyString("ActionProfiles"), true);
+        if (is_array($profiles)) {
+            foreach ($profiles as $p) {
+                if (($p['ProfileID'] ?? '') === $profileID) {
+                    return $p;
+                }
+            }
+        }
+        return [];
+    }
+
     public function MessageSink($TimeStamp, $SenderID, $Message, $Data)
     {
         $monitored = json_decode($this->ReadPropertyString("MonitoredVariables"), true);
@@ -121,8 +136,10 @@ class SmartAlarmManager extends IPSModule
                         }
                     }
                     
-                    // Also turn off LEDs if it was an Info or Alarm that just got resolved by the sensor
-                    $this->TriggerHomematicLEDs($item, true);
+                    // Also turn off LEDs and Sirens if it was an Info or Alarm that just got resolved by the sensor
+                    $profile = $this->GetActionProfile($item['ProfileID'] ?? '');
+                    $this->TriggerHomematicLEDs($profile, true);
+                    $this->TriggerHomematicSirens($profile, true);
                 }
             }
         }
@@ -160,12 +177,13 @@ class SmartAlarmManager extends IPSModule
         $type = $item['AlarmType'] ?? 0;
         $msg = $item['Message'] ?? "Alarm ausgelöst";
         $vid = $item['VariableID'];
+        $profile = $this->GetActionProfile($item['ProfileID'] ?? '');
 
         if ($type == 1) {
             // Info / Doorbell (Fire and Forget)
             $this->LogMessage("Info/Event ausgelöst: " . $msg, KL_NOTIFY);
             $this->SendDebug("Trigger", "Info/Event: " . $msg, 0);
-            $this->TriggerInfo($item);
+            $this->TriggerInfo($profile, $msg);
             
             $this->SetValue("LastEvent", date("d.m.Y H:i:s") . " - " . $msg);
             // Info pulse for status (only if nothing worse is active)
@@ -182,14 +200,15 @@ class SmartAlarmManager extends IPSModule
                 $alarms[$vid] = [
                     "timestamp" => time(),
                     "level" => 1,
-                    "item" => $item
+                    "item" => $item,
+                    "profile" => $profile
                 ];
                 $this->SetBuffer("ActiveAlarms", json_encode($alarms));
                 
                 $this->LogMessage("ALARM ausgelöst (Stufe 1): " . $msg, KL_WARNING);
                 $this->SendDebug("Trigger", "Alarm Stufe 1: " . $msg, 0);
                 
-                $this->TriggerLevel1($item);
+                $this->TriggerLevel1($profile, $msg);
                 
                 $ident = "Alarm_" . $vid;
                 if (@IPS_GetObjectIDByIdent($ident, $this->InstanceID)) {
@@ -218,7 +237,9 @@ class SmartAlarmManager extends IPSModule
                 $vid = substr($Ident, 6);
                 $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
                 if (isset($alarms[$vid])) {
-                    $this->TriggerHomematicLEDs($alarms[$vid]['item'], true); // Turn off LEDs
+                    $profile = $alarms[$vid]['profile'] ?? [];
+                    $this->TriggerHomematicLEDs($profile, true); // Turn off LEDs
+                    $this->TriggerHomematicSirens($profile, true); // Turn off Sirens
                     unset($alarms[$vid]);
                     $this->SetBuffer("ActiveAlarms", json_encode($alarms));
                 }
@@ -236,7 +257,9 @@ class SmartAlarmManager extends IPSModule
                     if (@IPS_GetObjectIDByIdent($ident, $this->InstanceID)) {
                         $this->SetValue($ident, false);
                     }
-                    $this->TriggerHomematicLEDs($alarm['item'], true); // Turn off LEDs
+                    $profile = $alarm['profile'] ?? [];
+                    $this->TriggerHomematicLEDs($profile, true); // Turn off LEDs
+                    $this->TriggerHomematicSirens($profile, true); // Turn off Sirens
                 }
                 $this->SetBuffer("ActiveAlarms", "{}");
                 $this->SetTimerInterval("EscalationTimer", 0);
@@ -257,32 +280,33 @@ class SmartAlarmManager extends IPSModule
         $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
         if (empty($alarms)) {
             $this->SetTimerInterval("EscalationTimer", 0);
-            $this->UpdateStatusVariables();
             return;
         }
 
-        $changed = false;
-        $lvl2Time = $this->ReadPropertyInteger("EscalationTimeLvl2");
-        $lvl3Time = $this->ReadPropertyInteger("EscalationTimeLvl3");
         $now = time();
+        $changed = false;
+        $lvl2_time = $this->ReadPropertyInteger("EscalationTimeLvl2");
+        $lvl3_time = $this->ReadPropertyInteger("EscalationTimeLvl3");
 
         foreach ($alarms as $vid => &$alarm) {
             $elapsed = $now - $alarm['timestamp'];
+            $msg = $alarm['item']['Message'] ?? "Alarm";
+            $profile = $alarm['profile'] ?? [];
 
-            if ($alarm['level'] == 1 && $elapsed >= $lvl2Time) {
+            if ($alarm['level'] == 1 && $elapsed >= $lvl2_time) {
                 $alarm['level'] = 2;
                 $changed = true;
-                $this->LogMessage("Alarm Eskalation (Stufe 2): " . $alarm['item']['Message'], KL_WARNING);
-                $this->SendDebug("Escalation", "Stufe 2: " . $alarm['item']['Message'], 0);
-                $this->TriggerLevel2($alarm['item']);
+                $this->LogMessage("Alarm ESKALATION (Stufe 2): " . $msg, KL_WARNING);
+                $this->SendDebug("Escalation", "Stufe 2: " . $msg, 0);
+                $this->TriggerLevel2($profile, $msg);
             }
 
-            if ($alarm['level'] == 2 && $elapsed >= $lvl3Time) {
+            if ($alarm['level'] == 2 && $elapsed >= $lvl3_time) {
                 $alarm['level'] = 3;
                 $changed = true;
-                $this->LogMessage("VOLLALARM Eskalation (Stufe 3): " . $alarm['item']['Message'], KL_ERROR);
-                $this->SendDebug("Escalation", "Stufe 3 (VOLLALARM): " . $alarm['item']['Message'], 0);
-                $this->TriggerLevel3($alarm['item']);
+                $this->LogMessage("VOLLALARM (Stufe 3): " . $msg, KL_ERROR);
+                $this->SendDebug("Escalation", "Stufe 3: " . $msg, 0);
+                $this->TriggerLevel3($profile, $msg);
             }
         }
 
@@ -297,9 +321,12 @@ class SmartAlarmManager extends IPSModule
         $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
         $count = count($alarms);
         $this->SetValue("ActiveAlarmsCount", $count);
-
+        
         if ($count == 0) {
-            $this->SetValue("SystemStatus", 0); // Alles OK
+            // Keep status at 1 if Info was triggered recently, else 0
+            if ($this->GetValue("SystemStatus") > 1) {
+                $this->SetValue("SystemStatus", 0);
+            }
         } else {
             $maxLevel = 1;
             foreach ($alarms as $alarm) {
@@ -312,10 +339,9 @@ class SmartAlarmManager extends IPSModule
         }
     }
 
-    private function TriggerLevel1($item)
+    private function TriggerLevel1($profile, $message)
     {
-        $message = $item['Message'] ?? "Alarm";
-        if ($item['UseWebFront'] ?? true) {
+        if ($profile['UseWebFront'] ?? true) {
             $webfront = $this->ReadPropertyInteger("TargetWebFront");
             if ($webfront > 0 && IPS_InstanceExists($webfront)) {
                 @WFC_PushNotification($webfront, "Alarm!", $message, "", 0);
@@ -323,19 +349,18 @@ class SmartAlarmManager extends IPSModule
             }
         }
         
-        if ($item['UseSonos'] ?? true) {
+        if ($profile['UseSonos'] ?? true) {
             $this->TriggerSonos($message);
         }
         
-        $this->TriggerHomematicMP3($item);
-        $this->TriggerHomematicLEDs($item);
+        $this->TriggerHomematicMP3($profile);
+        $this->TriggerHomematicLEDs($profile);
+        $this->TriggerHomematicSirens($profile);
     }
 
-    private function TriggerLevel2($item)
+    private function TriggerLevel2($profile, $message)
     {
-        $message = $item['Message'] ?? "Alarm";
-        
-        if ($item['UseVestaboard'] ?? true) {
+        if ($profile['UseVestaboard'] ?? true) {
             $vesta = $this->ReadPropertyInteger("TargetVestaboard");
             if ($vesta > 0 && IPS_InstanceExists($vesta)) {
                 if (function_exists('VESTA_SendMessage')) {
@@ -344,7 +369,7 @@ class SmartAlarmManager extends IPSModule
             }
         }
 
-        if ($item['UseEmail'] ?? true) {
+        if ($profile['UseEmail'] ?? true) {
             $smtp = $this->ReadPropertyInteger("TargetSMTP");
             $email = trim($this->ReadPropertyString("EmailAddress"));
             if ($smtp > 0 && IPS_InstanceExists($smtp)) {
@@ -353,30 +378,23 @@ class SmartAlarmManager extends IPSModule
                     $result = @SMTP_SendMailEx($smtp, $email, "SmartHome Alarm Stufe 2", "Folgender Alarm wurde ausgelöst und noch nicht quittiert:\n\n" . $message);
                     if ($result === false) {
                         $this->LogMessage("Fehler beim E-Mail Versand! Bitte prüfe die Einstellungen der SMTP-Instanz #$smtp", KL_ERROR);
-                    } else {
-                        $this->SendDebug("Email", "E-Mail erfolgreich versendet.", 0);
                     }
-                } else {
-                    $this->LogMessage("E-Mail nicht gesendet: Es ist keine E-Mail Adresse in der Konfiguration hinterlegt.", KL_WARNING);
                 }
-            } else {
-                $this->LogMessage("E-Mail nicht gesendet: Es ist keine gültige SMTP-Instanz ausgewählt.", KL_WARNING);
             }
         }
         
-        if ($item['UseSonos'] ?? true) {
+        if ($profile['UseSonos'] ?? true) {
             $this->TriggerSonos("Achtung, Alarm: " . $message);
         }
         
-        $this->TriggerHomematicMP3($item);
-        $this->TriggerHomematicLEDs($item);
+        $this->TriggerHomematicMP3($profile);
+        $this->TriggerHomematicLEDs($profile);
+        $this->TriggerHomematicSirens($profile);
     }
 
-    private function TriggerLevel3($item)
+    private function TriggerLevel3($profile, $message)
     {
-        $message = $item['Message'] ?? "Alarm";
-        
-        if ($item['UseVestaboard'] ?? true) {
+        if ($profile['UseVestaboard'] ?? true) {
             $vesta = $this->ReadPropertyInteger("TargetVestaboard");
             if ($vesta > 0 && IPS_InstanceExists($vesta)) {
                 if (function_exists('VESTA_SendMessage')) {
@@ -385,7 +403,7 @@ class SmartAlarmManager extends IPSModule
             }
         }
         
-        if ($item['UseWebFront'] ?? true) {
+        if ($profile['UseWebFront'] ?? true) {
             $webfront = $this->ReadPropertyInteger("TargetWebFront");
             if ($webfront > 0 && IPS_InstanceExists($webfront)) {
                 @WFC_PushNotification($webfront, "VOLLALARM", $message, "", 0);
@@ -393,19 +411,18 @@ class SmartAlarmManager extends IPSModule
             }
         }
         
-        if ($item['UseSonos'] ?? true) {
+        if ($profile['UseSonos'] ?? true) {
             $this->TriggerSonos("Vollalarm: " . $message);
         }
         
-        $this->TriggerHomematicMP3($item);
-        $this->TriggerHomematicLEDs($item);
+        $this->TriggerHomematicMP3($profile);
+        $this->TriggerHomematicLEDs($profile);
+        $this->TriggerHomematicSirens($profile);
     }
 
-    private function TriggerInfo($item)
+    private function TriggerInfo($profile, $message)
     {
-        $message = $item['Message'] ?? "Info";
-        
-        if ($item['UseWebFront'] ?? true) {
+        if ($profile['UseWebFront'] ?? true) {
             $webfront = $this->ReadPropertyInteger("TargetWebFront");
             if ($webfront > 0 && IPS_InstanceExists($webfront)) {
                 @WFC_PushNotification($webfront, "Info", $message, "", 0);
@@ -413,7 +430,7 @@ class SmartAlarmManager extends IPSModule
             }
         }
         
-        if ($item['UseVestaboard'] ?? true) {
+        if ($profile['UseVestaboard'] ?? true) {
             $vesta = $this->ReadPropertyInteger("TargetVestaboard");
             if ($vesta > 0 && IPS_InstanceExists($vesta)) {
                 if (function_exists('VESTA_SendMessage')) {
@@ -422,28 +439,23 @@ class SmartAlarmManager extends IPSModule
             }
         }
         
-        if ($item['UseEmail'] ?? true) {
+        if ($profile['UseEmail'] ?? true) {
             $smtp = $this->ReadPropertyInteger("TargetSMTP");
             $email = trim($this->ReadPropertyString("EmailAddress"));
             if ($smtp > 0 && IPS_InstanceExists($smtp)) {
                 if ($email != "") {
-                    $this->SendDebug("Email", "Versuche Info-E-Mail zu senden an: " . $email, 0);
-                    $result = @SMTP_SendMailEx($smtp, $email, "SmartHome Info / Event", $message);
-                    if ($result === false) {
-                        $this->LogMessage("Fehler beim E-Mail Versand! Bitte prüfe die Einstellungen der SMTP-Instanz #$smtp", KL_ERROR);
-                    } else {
-                        $this->SendDebug("Email", "Info-E-Mail erfolgreich versendet.", 0);
-                    }
+                    @SMTP_SendMailEx($smtp, $email, "SmartHome Info / Event", $message);
                 }
             }
         }
         
-        if ($item['UseSonos'] ?? true) {
+        if ($profile['UseSonos'] ?? true) {
             $this->TriggerSonos($message);
         }
         
-        $this->TriggerHomematicMP3($item);
-        $this->TriggerHomematicLEDs($item);
+        $this->TriggerHomematicMP3($profile);
+        $this->TriggerHomematicLEDs($profile);
+        $this->TriggerHomematicSirens($profile);
     }
     
     private function TriggerSonos($message)
@@ -457,35 +469,36 @@ class SmartAlarmManager extends IPSModule
             } elseif (function_exists('SNS_PlayText')) {
                 $this->SendDebug("Sonos", "SNS_PlayText: " . $message, 0);
                 @SNS_PlayText($sonos, $message);
-            } else {
-                $this->LogMessage("Sonos nicht angesteuert: Weder GSTTS_PlayMessage noch SNS_PlayText Funktion gefunden.", KL_WARNING);
             }
         }
     }
 
-    private function TriggerHomematicMP3($item)
+    private function TriggerHomematicMP3($profile)
     {
-        if (!($item['UseHmIP_MP3'] ?? false)) return;
+        if (!($profile['UseHmIP_MP3'] ?? false)) return;
         
         $mp3 = $this->ReadPropertyInteger("TargetHmIP_MP3");
         if ($mp3 > 0 && IPS_InstanceExists($mp3)) {
-            $soundID = $item['HmIP_MP3_SoundID'] ?? 0;
-            // L=100, DU=0 (Sekunden), DV=5 (Dauer), RTU=0, RTV=0, R=0 (Repeat), SL=SoundID
-            $string = "L=100,DU=0,DV=5,RTU=0,RTV=0,R=0,SL=" . $soundID;
-            $this->SendDebug("HmIP-MP3", "Spiele Sound $soundID auf Instanz $mp3", 0);
+            $soundStr = $profile['MP3_Sounds'] ?? "1";
+            $vol = $profile['MP3_Volume'] ?? 100;
+            $rep = $profile['MP3_Repeat'] ?? 0;
+            // L=vol, DU=0 (Sekunden), DV=0, RTU=0, RTV=0, R=rep, SL=soundStr
+            $string = "L=$vol,DU=0,DV=0,RTU=0,RTV=0,R=$rep,SL=" . $soundStr;
+            $this->SendDebug("HmIP-MP3", "Spiele Sounds $soundStr auf Instanz $mp3", 0);
             @HM_WriteValueString($mp3, 'COMBINED_PARAMETER', $string);
         }
     }
 
-    private function TriggerHomematicLEDs($item, $turnOff = false)
+    private function TriggerHomematicLEDs($profile, $turnOff = false)
     {
-        if (!($item['UseHmIP_LED'] ?? false)) return;
+        if (!$turnOff && !($profile['UseHmIP_LED'] ?? false)) return;
         
         $leds = json_decode($this->ReadPropertyString("TargetHmIP_LEDs"), true);
         if (!is_array($leds) || count($leds) == 0) return;
 
-        $color = $item['HmIP_LED_Color'] ?? 4; 
-        $mode = $item['HmIP_LED_Mode'] ?? 1; 
+        $color = $profile['LED_Color'] ?? 4; 
+        $mode = $profile['LED_Mode'] ?? 1; 
+        $bright = $profile['LED_Brightness'] ?? 100;
 
         foreach ($leds as $led) {
             $instId = $led['InstanceID'] ?? 0;
@@ -496,13 +509,13 @@ class SmartAlarmManager extends IPSModule
                     if ($turnOff) {
                         $string = 'L=100,DV=10,DU=0,RTV=0,RTU=1,C=0';
                     } else {
-                        $string = "L=100,DV=31,DU=2,RTV=0,RTU=1,C=$color";
+                        $string = "L=$bright,DV=31,DU=2,RTV=0,RTU=1,C=$color";
                     }
                 } else {
                     if ($turnOff) {
                         $string = 'L=0,DV=31,DU=2,RTV=0,RTU=0,C=0,CB=0,RTTOV=0,RTTOU=3';
                     } else {
-                        $string = "L=100,DV=31,DU=2,RTV=0,RTU=0,C=$color,CB=$mode,RTTOV=0,RTTOU=3";
+                        $string = "L=$bright,DV=31,DU=2,RTV=0,RTU=0,C=$color,CB=$mode,RTTOV=0,RTTOU=3";
                     }
                 }
 
@@ -512,20 +525,53 @@ class SmartAlarmManager extends IPSModule
         }
     }
 
-    public function TestHmIP_MP3(int $soundID)
+    private function TriggerHomematicSirens($profile, $turnOff = false)
+    {
+        if (!$turnOff && !($profile['UseHmIP_Siren'] ?? false)) return;
+        
+        $sirens = json_decode($this->ReadPropertyString("TargetHmIP_Sirens"), true);
+        if (!is_array($sirens) || count($sirens) == 0) return;
+
+        $ac = $profile['Siren_Acoustic'] ?? 1;
+        $opt = $profile['Siren_Optical'] ?? 1;
+
+        // ASIR-O uses Acoustic (A), Optical (O), Duration Value (DV), Duration Unit (DU)
+        // O=0 (Off), 1=Blink, 2=Flash
+        // A=0 (Off), 1=Freq rising, 2=Freq falling, 3=rising/falling etc.
+        // Actually for ASIR, it's L=... DU=... DV=... for combined but ASIR has dedicated COMBINED_PARAMETER fields:
+        // Wait, ASIR-O COMBINED_PARAMETER is typically "O=1,A=1,DV=...". 
+        // Let's use the standard ASIR combined param: O=$opt, A=$ac, DV=31, DU=2
+        // If turnOff is true, O=0, A=0, DV=31, DU=2
+
+        if ($turnOff) {
+            $string = "O=0,A=0,DV=31,DU=2";
+        } else {
+            $string = "O=$opt,A=$ac,DV=31,DU=2";
+        }
+
+        foreach ($sirens as $s) {
+            $instId = $s['InstanceID'] ?? 0;
+            if ($instId > 0 && IPS_InstanceExists($instId)) {
+                $this->SendDebug("HmIP-Siren", "Sende $string an Sirenen Instanz $instId", 0);
+                @HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
+            }
+        }
+    }
+
+    public function TestHmIP_MP3(string $soundStr, int $vol, int $rep)
     {
         $mp3 = $this->ReadPropertyInteger("TargetHmIP_MP3");
         if ($mp3 > 0 && IPS_InstanceExists($mp3)) {
-            $string = "L=100,DU=0,DV=5,RTU=0,RTV=0,R=0,SL=" . $soundID;
-            $this->SendDebug("HmIP-MP3-Test", "Spiele Sound $soundID auf Instanz $mp3", 0);
+            $string = "L=$vol,DU=0,DV=0,RTU=0,RTV=0,R=$rep,SL=" . $soundStr;
+            $this->SendDebug("HmIP-MP3-Test", "Spiele Sounds $soundStr auf Instanz $mp3", 0);
             @HM_WriteValueString($mp3, 'COMBINED_PARAMETER', $string);
-            echo "Sound $soundID wurde an Instanz $mp3 gesendet.";
+            echo "Sound $soundStr wurde an Instanz $mp3 gesendet.";
         } else {
             echo "Fehler: Keine gültige MP3-Gong Instanz ausgewählt!";
         }
     }
 
-    public function TestHmIP_LED(int $color, int $durationSeconds)
+    public function TestHmIP_LED(int $color, int $bright, int $durationSeconds)
     {
         $leds = json_decode($this->ReadPropertyString("TargetHmIP_LEDs"), true);
         if (!is_array($leds) || count($leds) == 0) {
@@ -540,9 +586,9 @@ class SmartAlarmManager extends IPSModule
                 $isMP3P = $led['IsMP3P'] ?? false;
                 
                 if ($isMP3P) {
-                    $string = "L=100,DV=$durationSeconds,DU=0,RTV=0,RTU=1,C=$color";
+                    $string = "L=$bright,DV=$durationSeconds,DU=0,RTV=0,RTU=1,C=$color";
                 } else {
-                    $string = "L=100,DV=$durationSeconds,DU=0,RTV=0,RTU=0,C=$color,CB=1,RTTOV=0,RTTOU=3";
+                    $string = "L=$bright,DV=$durationSeconds,DU=0,RTV=0,RTU=0,C=$color,CB=1,RTTOV=0,RTTOU=3";
                 }
                 
                 $this->SendDebug("HmIP-LED-Test", "Sende $string an LED Instanz $instId", 0);
@@ -550,7 +596,29 @@ class SmartAlarmManager extends IPSModule
                 $count++;
             }
         }
-        echo "LED Test-Signal (Farbe $color, $durationSeconds Sekunden) an $count Instanz(en) gesendet.";
+        echo "LED Test-Signal (Farbe $color, Helligkeit $bright, $durationSeconds Sekunden) an $count Instanz(en) gesendet.";
+    }
+
+    public function TestHmIP_Siren(int $ac, int $opt, int $durationSeconds)
+    {
+        $sirens = json_decode($this->ReadPropertyString("TargetHmIP_Sirens"), true);
+        if (!is_array($sirens) || count($sirens) == 0) {
+            echo "Fehler: Keine Sirenen-Instanzen ausgewählt!";
+            return;
+        }
+
+        $string = "O=$opt,A=$ac,DV=$durationSeconds,DU=0";
+
+        $count = 0;
+        foreach ($sirens as $s) {
+            $instId = $s['InstanceID'] ?? 0;
+            if ($instId > 0 && IPS_InstanceExists($instId)) {
+                $this->SendDebug("HmIP-Siren-Test", "Sende $string an Sirenen Instanz $instId", 0);
+                @HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
+                $count++;
+            }
+        }
+        echo "Sirenen Test-Signal (A=$ac, O=$opt, $durationSeconds Sekunden) an $count Instanz(en) gesendet.";
     }
 
     private function IsTriggered($currentVal, $triggerValStr)

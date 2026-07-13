@@ -74,6 +74,191 @@
             ]
         },
         {
+            "type": "List",
+            "name": "TargetHmIP_Sirens",
+            "caption": "Homematic Sirenen (z.B. HmIP-ASIR-O)",
+            "add": true,
+            "delete": true,
+            "columns": [
+                {
+                    "caption": "Instanz",
+                    "name": "InstanceID",
+                    "width": "auto",
+                    "add": 0,
+                    "edit": { "type": "SelectInstance" }
+                }
+            ]
+        },
+        {
+            "type": "Label",
+            "caption": "Aktions-Profile"
+        },
+        {
+            "type": "List",
+            "name": "ActionProfiles",
+            "caption": "Profile",
+            "add": true,
+            "delete": true,
+            "columns": [
+                {
+                    "caption": "Profil-ID (Name)",
+                    "name": "ProfileID",
+                    "width": "150px",
+                    "add": "Neues_Profil",
+                    "edit": { "type": "ValidationTextBox" }
+                },
+                {
+                    "caption": "App",
+                    "name": "UseWebFront",
+                    "width": "50px",
+                    "add": true,
+                    "edit": { "type": "CheckBox" }
+                },
+                {
+                    "caption": "E-Mail",
+                    "name": "UseEmail",
+                    "width": "50px",
+                    "add": true,
+                    "edit": { "type": "CheckBox" }
+                },
+                {
+                    "caption": "Vestaboard",
+                    "name": "UseVestaboard",
+                    "width": "50px",
+                    "add": true,
+                    "edit": { "type": "CheckBox" }
+                },
+                {
+                    "caption": "Sonos",
+                    "name": "UseSonos",
+                    "width": "50px",
+                    "add": true,
+                    "edit": { "type": "CheckBox" }
+                },
+                {
+                    "caption": "MP3-Gong?",
+                    "name": "UseHmIP_MP3",
+                    "width": "80px",
+                    "add": false,
+                    "edit": { "type": "CheckBox" }
+                },
+                {
+                    "caption": "MP3 Track(s)",
+                    "name": "MP3_Sounds",
+                    "width": "100px",
+                    "add": "1",
+                    "edit": { "type": "ValidationTextBox" }
+                },
+                {
+                    "caption": "Lautstärke",
+                    "name": "MP3_Volume",
+                    "width": "80px",
+                    "add": 100,
+                    "edit": { "type": "NumberSpinner" }
+                },
+                {
+                    "caption": "Wdh.",
+                    "name": "MP3_Repeat",
+                    "width": "50px",
+                    "add": 0,
+                    "edit": { "type": "NumberSpinner" }
+                },
+                {
+                    "caption": "LEDs?",
+                    "name": "UseHmIP_LED",
+                    "width": "60px",
+                    "add": false,
+                    "edit": { "type": "CheckBox" }
+                },
+                {
+                    "caption": "LED Helligkeit",
+                    "name": "LED_Brightness",
+                    "width": "80px",
+                    "add": 100,
+                    "edit": { "type": "NumberSpinner" }
+                },
+                {
+                    "caption": "LED Farbe",
+                    "name": "LED_Color",
+                    "width": "100px",
+                    "add": 4,
+                    "edit": {
+                        "type": "Select",
+                        "options": [
+                            { "caption": "Aus", "value": 0 },
+                            { "caption": "Blau", "value": 1 },
+                            { "caption": "Grün", "value": 2 },
+                            { "caption": "Türkis", "value": 3 },
+                            { "caption": "Rot", "value": 4 },
+                            { "caption": "Violett", "value": 5 },
+                            { "caption": "Gelb", "value": 6 },
+                            { "caption": "Weiß", "value": 7 }
+                        ]
+                    }
+                },
+                {
+                    "caption": "LED Modus",
+                    "name": "LED_Mode",
+                    "width": "100px",
+                    "add": 1,
+                    "edit": {
+                        "type": "Select",
+                        "options": [
+                            { "caption": "Dauerlicht", "value": 1 },
+                            { "caption": "Blinken (L)", "value": 2 },
+                            { "caption": "Blinken (M)", "value": 3 },
+                            { "caption": "Blinken (S)", "value": 4 },
+                            { "caption": "Blitzen (L)", "value": 5 },
+                            { "caption": "Blitzen (M)", "value": 6 },
+                            { "caption": "Blitzen (S)", "value": 7 },
+                            { "caption": "Pulsieren (L)", "value": 8 },
+                            { "caption": "Pulsieren (M)", "value": 9 },
+                            { "caption": "Pulsieren (S)", "value": 10 }
+                        ]
+                    }
+                },
+                {
+                    "caption": "Sirene?",
+                    "name": "UseHmIP_Siren",
+                    "width": "60px",
+                    "add": false,
+                    "edit": { "type": "CheckBox" }
+                },
+                {
+                    "caption": "Sirene Ton",
+                    "name": "Siren_Acoustic",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": {
+                        "type": "Select",
+                        "options": [
+                            { "caption": "Kein Ton", "value": 0 },
+                            { "caption": "Frequenz steigend", "value": 1 },
+                            { "caption": "Frequenz fallend", "value": 2 },
+                            { "caption": "Frequenz steigen/fallend", "value": 3 },
+                            { "caption": "Frequenz tief/hoch", "value": 4 },
+                            { "caption": "Frequenz tief", "value": 5 },
+                            { "caption": "Frequenz hoch", "value": 6 }
+                        ]
+                    }
+                },
+                {
+                    "caption": "Sirene Optik",
+                    "name": "Siren_Optical",
+                    "width": "120px",
+                    "add": 0,
+                    "edit": {
+                        "type": "Select",
+                        "options": [
+                            { "caption": "Kein Licht", "value": 0 },
+                            { "caption": "Blinken", "value": 1 },
+                            { "caption": "Blitzen", "value": 2 }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
             "type": "Label",
             "caption": "Überwachte Variablen"
         },
@@ -108,12 +293,12 @@
                 {
                     "caption": "Verzögerung (s)",
                     "name": "DelaySeconds",
-                    "width": "120px",
+                    "width": "100px",
                     "add": 0,
                     "edit": { "type": "NumberSpinner" }
                 },
                 {
-                    "caption": "Verhalten",
+                    "caption": "Alarm/Eskalations-Typ",
                     "name": "AlarmType",
                     "width": "150px",
                     "add": 0,
@@ -126,92 +311,11 @@
                     }
                 },
                 {
-                    "caption": "Push",
-                    "name": "UseWebFront",
-                    "width": "60px",
-                    "add": true,
-                    "edit": { "type": "CheckBox" }
-                },
-                {
-                    "caption": "Vestaboard",
-                    "name": "UseVestaboard",
-                    "width": "80px",
-                    "add": true,
-                    "edit": { "type": "CheckBox" }
-                },
-                {
-                    "caption": "E-Mail",
-                    "name": "UseEmail",
-                    "width": "60px",
-                    "add": true,
-                    "edit": { "type": "CheckBox" }
-                },
-                {
-                    "caption": "Sonos",
-                    "name": "UseSonos",
-                    "width": "60px",
-                    "add": true,
-                    "edit": { "type": "CheckBox" }
-                },
-                {
-                    "caption": "HmIP MP3",
-                    "name": "UseHmIP_MP3",
-                    "width": "80px",
-                    "add": false,
-                    "edit": { "type": "CheckBox" }
-                },
-                {
-                    "caption": "MP3 ID",
-                    "name": "HmIP_MP3_SoundID",
-                    "width": "80px",
-                    "add": 0,
-                    "edit": { "type": "NumberSpinner" }
-                },
-                {
-                    "caption": "HmIP LED",
-                    "name": "UseHmIP_LED",
-                    "width": "80px",
-                    "add": false,
-                    "edit": { "type": "CheckBox" }
-                },
-                {
-                    "caption": "LED Farbe",
-                    "name": "HmIP_LED_Color",
-                    "width": "100px",
-                    "add": 6,
-                    "edit": {
-                        "type": "Select",
-                        "options": [
-                            { "caption": "Blau", "value": 1 },
-                            { "caption": "Grün", "value": 2 },
-                            { "caption": "Türkis", "value": 3 },
-                            { "caption": "Rot", "value": 4 },
-                            { "caption": "Violett", "value": 5 },
-                            { "caption": "Gelb", "value": 6 },
-                            { "caption": "Weiß", "value": 7 }
-                        ]
-                    }
-                },
-                {
-                    "caption": "LED Modus",
-                    "name": "HmIP_LED_Mode",
-                    "width": "120px",
-                    "add": 1,
-                    "edit": {
-                        "type": "Select",
-                        "options": [
-                            { "caption": "Dauerlicht", "value": 1 },
-                            { "caption": "Blinken (L)", "value": 2 },
-                            { "caption": "Blinken (M)", "value": 3 },
-                            { "caption": "Blinken (S)", "value": 4 },
-                            { "caption": "Blitzen (L)", "value": 5 },
-                            { "caption": "Blitzen (M)", "value": 6 },
-                            { "caption": "Blitzen (S)", "value": 7 },
-                            { "caption": "Pulsieren (L)", "value": 8 },
-                            { "caption": "Pulsieren (M)", "value": 9 },
-                            { "caption": "Pulsieren (S)", "value": 10 }
-                        ]
-                    }
+                    "caption": "Aktions-Profil (Name)",
+                    "name": "ProfileID",
+                    "width": "200px",
+                    "add": "Neues_Profil",
+                    "edit": { "type": "ValidationTextBox" }
                 }
             ]
         }
@@ -219,20 +323,33 @@
     "actions": [
         {
             "type": "Label",
-            "caption": "Test: Homematic MP3 / LEDs"
+            "caption": "Test: Homematic MP3 / LEDs / Sirenen"
         },
         {
             "type": "RowLayout",
             "items": [
                 {
+                    "type": "ValidationTextBox",
+                    "name": "TestSoundStr",
+                    "caption": "Sound Tracks (z.B. 1;2)",
+                    "value": "1"
+                },
+                {
                     "type": "NumberSpinner",
-                    "name": "TestSoundID",
-                    "caption": "Sound ID"
+                    "name": "TestMP3Vol",
+                    "caption": "Lautstärke",
+                    "value": 100
+                },
+                {
+                    "type": "NumberSpinner",
+                    "name": "TestMP3Rep",
+                    "caption": "Wiederholungen",
+                    "value": 0
                 },
                 {
                     "type": "Button",
                     "caption": "Test MP3 Ton spielen",
-                    "onClick": "SAM_TestHmIP_MP3($id, $TestSoundID);"
+                    "onClick": "SAM_TestHmIP_MP3($id, $TestSoundStr, $TestMP3Vol, $TestMP3Rep);"
                 }
             ]
         },
@@ -246,10 +363,16 @@
                     "value": 15
                 },
                 {
+                    "type": "NumberSpinner",
+                    "name": "TestLedBright",
+                    "caption": "Helligkeit",
+                    "value": 100
+                },
+                {
                     "type": "Select",
                     "name": "TestColor",
                     "caption": "Farbe",
-                    "value": 6,
+                    "value": 4,
                     "options": [
                         { "caption": "Aus", "value": 0 },
                         { "caption": "Blau", "value": 1 },
@@ -264,7 +387,44 @@
                 {
                     "type": "Button",
                     "caption": "Test LEDs leuchten",
-                    "onClick": "SAM_TestHmIP_LED($id, $TestColor, $TestDuration);"
+                    "onClick": "SAM_TestHmIP_LED($id, $TestColor, $TestLedBright, $TestDuration);"
+                }
+            ]
+        },
+        {
+            "type": "RowLayout",
+            "items": [
+                {
+                    "type": "NumberSpinner",
+                    "name": "TestSirenDuration",
+                    "caption": "Dauer (Sek)",
+                    "value": 15
+                },
+                {
+                    "type": "Select",
+                    "name": "TestSirenAc",
+                    "caption": "Akustik",
+                    "value": 1,
+                    "options": [
+                        { "caption": "Frequenz steigend", "value": 1 },
+                        { "caption": "Frequenz fallend", "value": 2 },
+                        { "caption": "Frequenz steigen/fallend", "value": 3 }
+                    ]
+                },
+                {
+                    "type": "Select",
+                    "name": "TestSirenOpt",
+                    "caption": "Optik",
+                    "value": 1,
+                    "options": [
+                        { "caption": "Blinken", "value": 1 },
+                        { "caption": "Blitzen", "value": 2 }
+                    ]
+                },
+                {
+                    "type": "Button",
+                    "caption": "Test Sirenen auslösen",
+                    "onClick": "SAM_TestHmIP_Siren($id, $TestSirenAc, $TestSirenOpt, $TestSirenDuration);"
                 }
             ]
         }
