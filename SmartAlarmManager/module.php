@@ -37,7 +37,7 @@ class SmartAlarmManager extends IPSModuleStrict
     public function ApplyChanges(): void{
         parent::ApplyChanges();
 
-        IPS_SetVariableCustomPresentation($this->GetIDForIdent('SystemStatus'), json_encode([
+        IPS_SetVariableCustomPresentation($this->GetIDForIdent('SystemStatus'), [
             'ASSOCIATIONS' => [
                 ['VALUE' => 0, 'NAME' => 'Alles OK', 'ICON' => 'Ok', 'COLOR' => 0x00FF00],
                 ['VALUE' => 1, 'NAME' => 'Info / Hinweis', 'ICON' => 'Information', 'COLOR' => 0xFFFF00],
@@ -45,7 +45,7 @@ class SmartAlarmManager extends IPSModuleStrict
                 ['VALUE' => 3, 'NAME' => 'ESKALATION', 'ICON' => 'Warning', 'COLOR' => 0xFF0000],
                 ['VALUE' => 4, 'NAME' => 'VOLLALARM', 'ICON' => 'Alert', 'COLOR' => 0xFF0000]
             ]
-        ]));
+        ]);
 
 
         // Unregister all old messages
