@@ -66,9 +66,9 @@ class SmartAlarmManager extends IPSModuleStrict
                 $this->RegisterMessage($vid, VM_UPDATE);
                 
                 if (($item['AlarmType'] ?? 0) == 0) {
-                    $ident = "Alarm_" . $vid;
+                    $ident = "Alarm_". $vid;
                     $activeIdents[] = $ident;
-                    $this->MaintainVariable($ident, "Status: " . ($item['Message'] ?? 'Alarm'), 0, "~Alert", 0, true);
+                    $this->MaintainVariable($ident, "Status: ". ($item['Message'] ?? 'Alarm'), 0, "~Alert", 0, true);
                     $this->EnableAction($ident);
                 }
             }
@@ -114,8 +114,8 @@ class SmartAlarmManager extends IPSModuleStrict
                         $delays = json_decode($this->GetBuffer("ActiveDelays"), true) ?: [];
                         if (!isset($delays[$vid])) {
                             $delays[$vid] = [
-                                "triggerTime" => time() + $delay,
-                                "item" => $item
+                                "triggerTime"=> time() + $delay,
+                                "item"=> $item
                             ];
                             $this->SetBuffer("ActiveDelays", json_encode($delays));
                             $this->SetTimerInterval("DelayTimer", 1000);
@@ -182,14 +182,14 @@ class SmartAlarmManager extends IPSModuleStrict
         }
 
         if ($type == 1) {
-            $this->LogMessage("Info/Event ausgelöst: " . $msg, KL_NOTIFY);
-            $this->SendDebug("Trigger", "Info/Event: " . $msg, 0);
+            $this->LogMessage("Info/Event ausgelöst: ". $msg, KL_NOTIFY);
+            $this->SendDebug("Trigger", "Info/Event: ". $msg, 0);
             
             foreach ($profiles as $profile) {
                 $this->TriggerInfo($profile, $msg);
             }
             
-            $this->SetValue("LastEvent", date("d.m.Y H:i:s") . " - " . $msg);
+            $this->SetValue("LastEvent", date("d.m.Y H:i:s") . "- ". $msg);
             if ($this->GetValue("SystemStatus") == 0) {
                 $this->SetValue("SystemStatus", 1);
                 IPS_Sleep(3000); 
@@ -200,26 +200,26 @@ class SmartAlarmManager extends IPSModuleStrict
             
             if (!isset($alarms[$vid])) {
                 $alarms[$vid] = [
-                    "timestamp" => time(),
-                    "level" => 1,
-                    "item" => $item,
-                    "profiles" => $profiles
+                    "timestamp"=> time(),
+                    "level"=> 1,
+                    "item"=> $item,
+                    "profiles"=> $profiles
                 ];
                 $this->SetBuffer("ActiveAlarms", json_encode($alarms));
                 
-                $this->LogMessage("ALARM ausgelöst (Stufe 1): " . $msg, KL_WARNING);
-                $this->SendDebug("Trigger", "Alarm Stufe 1: " . $msg, 0);
+                $this->LogMessage("ALARM ausgelöst (Stufe 1): ". $msg, KL_WARNING);
+                $this->SendDebug("Trigger", "Alarm Stufe 1: ". $msg, 0);
                 
                 foreach ($profiles as $profile) {
                     $this->TriggerLevel1($profile, $msg);
                 }
                 
-                $ident = "Alarm_" . $vid;
+                $ident = "Alarm_". $vid;
                 if (@IPS_GetObjectIDByIdent($ident, $this->InstanceID)) {
                     $this->SetValue($ident, true);
                 }
                 
-                $this->SetValue("LastEvent", date("d.m.Y H:i:s") . " - ALARM: " . $msg);
+                $this->SetValue("LastEvent", date("d.m.Y H:i:s") . "- ALARM: ". $msg);
                 $this->SetTimerInterval("EscalationTimer", 10000);
                 $this->UpdateStatusVariables();
             }
@@ -230,8 +230,8 @@ class SmartAlarmManager extends IPSModuleStrict
         if (strpos($Ident, "Alarm_") === 0) {
             if ($Value == false) {
                 $this->SetValue($Ident, false);
-                $this->LogMessage("Alarm quittiert: " . $Ident, KL_NOTIFY);
-                $this->SendDebug("Acknowledge", "Quittiert: " . $Ident, 0);
+                $this->LogMessage("Alarm quittiert: ". $Ident, KL_NOTIFY);
+                $this->SendDebug("Acknowledge", "Quittiert: ". $Ident, 0);
                 
                 $vid = substr($Ident, 6);
                 $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
@@ -257,7 +257,7 @@ class SmartAlarmManager extends IPSModuleStrict
             if ($Value == true) {
                 $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
                 foreach ($alarms as $vid => $alarm) {
-                    $ident = "Alarm_" . $vid;
+                    $ident = "Alarm_". $vid;
                     if (@IPS_GetObjectIDByIdent($ident, $this->InstanceID)) {
                         $this->SetValue($ident, false);
                     }
@@ -276,7 +276,7 @@ class SmartAlarmManager extends IPSModuleStrict
                 $this->SetTimerInterval("EscalationTimer", 0);
                 $this->UpdateStatusVariables();
                 $this->LogMessage("Alle Alarme quittiert.", KL_NOTIFY);
-                $this->SetValue("LastEvent", date("d.m.Y H:i:s") . " - Alle Alarme quittiert");
+                $this->SetValue("LastEvent", date("d.m.Y H:i:s") . "- Alle Alarme quittiert");
                 
                 $this->SetValue("AcknowledgeAll", false);
             }
@@ -310,8 +310,8 @@ class SmartAlarmManager extends IPSModuleStrict
             if ($alarm['level'] == 1 && $elapsed >= $lvl2_time) {
                 $alarm['level'] = 2;
                 $changed = true;
-                $this->LogMessage("Alarm ESKALATION (Stufe 2): " . $msg, KL_WARNING);
-                $this->SendDebug("Escalation", "Stufe 2: " . $msg, 0);
+                $this->LogMessage("Alarm ESKALATION (Stufe 2): ". $msg, KL_WARNING);
+                $this->SendDebug("Escalation", "Stufe 2: ". $msg, 0);
                 foreach ($profiles as $profile) {
                     $this->TriggerLevel2($profile, $msg);
                 }
@@ -320,8 +320,8 @@ class SmartAlarmManager extends IPSModuleStrict
             if ($alarm['level'] == 2 && $elapsed >= $lvl3_time) {
                 $alarm['level'] = 3;
                 $changed = true;
-                $this->LogMessage("VOLLALARM (Stufe 3): " . $msg, KL_ERROR);
-                $this->SendDebug("Escalation", "Stufe 3: " . $msg, 0);
+                $this->LogMessage("VOLLALARM (Stufe 3): ". $msg, KL_ERROR);
+                $this->SendDebug("Escalation", "Stufe 3: ". $msg, 0);
                 foreach ($profiles as $profile) {
                     $this->TriggerLevel3($profile, $msg);
                 }
@@ -390,9 +390,9 @@ class SmartAlarmManager extends IPSModuleStrict
                 if (function_exists('VESTA_SendMessage')) {
                     $this->LogMessage("Vestaboard: Sende Nachricht", KL_NOTIFY);
                     try {
-                        VESTA_SendMessage($vesta, "ALARM:\n" . $message);
+                        VESTA_SendMessage($vesta, "ALARM:\n". $message);
                     } catch (Exception $e) {
-                        $this->LogMessage("Fehler beim Senden an Vestaboard: " . $e->getMessage(), KL_ERROR);
+                        $this->LogMessage("Fehler beim Senden an Vestaboard: ". $e->getMessage(), KL_ERROR);
                     }
                 }
             }
@@ -405,9 +405,9 @@ class SmartAlarmManager extends IPSModuleStrict
                 if ($email != "") {
                     $this->LogMessage("E-Mail: Sende Mail an $email", KL_NOTIFY);
                     try {
-                        SMTP_SendMailEx($smtp, $email, "SmartHome Alarm Stufe 2", "Folgender Alarm wurde ausgelöst und noch nicht quittiert:\n\n" . $message);
+                        SMTP_SendMailEx($smtp, $email, "SmartHome Alarm Stufe 2", "Folgender Alarm wurde ausgelöst und noch nicht quittiert:\n\n". $message);
                     } catch (Exception $e) {
-                        $this->LogMessage("Fehler beim Senden der E-Mail: " . $e->getMessage(), KL_ERROR);
+                        $this->LogMessage("Fehler beim Senden der E-Mail: ". $e->getMessage(), KL_ERROR);
                     }
                 }
             }
@@ -415,7 +415,7 @@ class SmartAlarmManager extends IPSModuleStrict
         
         if ($profile['UseSonos'] ?? false) {
             $this->LogMessage("Sonos: Spiele TTS", KL_NOTIFY);
-            $this->TriggerSonos("Achtung, Alarm: " . $message);
+            $this->TriggerSonos("Achtung, Alarm: ". $message);
         }
         
         $this->TriggerHomematicMP3($profile);
@@ -434,9 +434,9 @@ class SmartAlarmManager extends IPSModuleStrict
                 if (function_exists('VESTA_SendMessage')) {
                     $this->LogMessage("Vestaboard: Sende Nachricht", KL_NOTIFY);
                     try {
-                        VESTA_SendMessage($vesta, "!!! VOLLALARM !!!\n" . $message);
+                        VESTA_SendMessage($vesta, "!!! VOLLALARM !!!\n". $message);
                     } catch (Exception $e) {
-                        $this->LogMessage("Fehler beim Senden an Vestaboard: " . $e->getMessage(), KL_ERROR);
+                        $this->LogMessage("Fehler beim Senden an Vestaboard: ". $e->getMessage(), KL_ERROR);
                     }
                 }
             }
@@ -454,7 +454,7 @@ class SmartAlarmManager extends IPSModuleStrict
         
         if ($profile['UseSonos'] ?? false) {
             $this->LogMessage("Sonos: Spiele TTS", KL_NOTIFY);
-            $this->TriggerSonos("Vollalarm: " . $message);
+            $this->TriggerSonos("Vollalarm: ". $message);
         }
         
         $this->TriggerHomematicMP3($profile);
@@ -485,7 +485,7 @@ class SmartAlarmManager extends IPSModuleStrict
                     try {
                         VESTA_SendMessage($vesta, $message);
                     } catch (Exception $e) {
-                        $this->LogMessage("Fehler beim Senden an Vestaboard: " . $e->getMessage(), KL_ERROR);
+                        $this->LogMessage("Fehler beim Senden an Vestaboard: ". $e->getMessage(), KL_ERROR);
                     }
                 }
             }
@@ -500,7 +500,7 @@ class SmartAlarmManager extends IPSModuleStrict
                     try {
                         SMTP_SendMailEx($smtp, $email, "SmartHome Info / Event", $message);
                     } catch (Exception $e) {
-                        $this->LogMessage("Fehler beim Senden der E-Mail: " . $e->getMessage(), KL_ERROR);
+                        $this->LogMessage("Fehler beim Senden der E-Mail: ". $e->getMessage(), KL_ERROR);
                     }
                 }
             }
@@ -528,7 +528,7 @@ class SmartAlarmManager extends IPSModuleStrict
                     SNS_PlayText($sonos, $message);
                 }
             } catch (Exception $e) {
-                $this->LogMessage("Fehler bei Sonos TTS: " . $e->getMessage(), KL_ERROR);
+                $this->LogMessage("Fehler bei Sonos TTS: ". $e->getMessage(), KL_ERROR);
             }
         }
     }
@@ -546,13 +546,13 @@ class SmartAlarmManager extends IPSModuleStrict
             $rep = 0;
             $dv = ($duration > 0) ? $duration : 0;
             
-            $string = "L=$vol,DU=0,DV=$dv,RTU=0,RTV=0,R=$rep,SL=" . $soundStr;
-            $this->LogMessage("Homematic MP3-Gong (Instanz $mp3): Spiele Tracks '$soundStr' (Lautstärke $vol%, Dauer: $duration s)", KL_NOTIFY);
+            $string = "L=$vol,DU=0,DV=$dv,RTU=0,RTV=0,R=$rep,SL=". $soundStr;
+            $this->LogMessage("Homematic MP3-Gong (Instanz $mp3): Spiele Tracks '$soundStr'(Lautstärke $vol%, Dauer: $duration s)", KL_NOTIFY);
             $this->SendDebug("HmIP-MP3", "Sende $string an Instanz $mp3", 0);
             try {
                 HM_WriteValueString($mp3, 'COMBINED_PARAMETER', $string);
             } catch (Exception $e) {
-                $this->LogMessage("Fehler bei HM_WriteValueString (MP3): " . $e->getMessage(), KL_ERROR);
+                $this->LogMessage("Fehler bei HM_WriteValueString (MP3): ". $e->getMessage(), KL_ERROR);
             }
         }
     }
@@ -588,7 +588,7 @@ class SmartAlarmManager extends IPSModuleStrict
             try {
                 HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
             } catch (Exception $e) {
-                $this->LogMessage("Fehler bei HM_WriteValueString (LED): " . $e->getMessage(), KL_ERROR);
+                $this->LogMessage("Fehler bei HM_WriteValueString (LED): ". $e->getMessage(), KL_ERROR);
             }
         }
     }
@@ -612,7 +612,7 @@ class SmartAlarmManager extends IPSModuleStrict
             try {
                 HM_WriteValueString($instId, 'COMBINED_PARAMETER', $string);
             } catch (Exception $e) {
-                $this->LogMessage("Fehler bei HM_WriteValueString (Sirene): " . $e->getMessage(), KL_ERROR);
+                $this->LogMessage("Fehler bei HM_WriteValueString (Sirene): ". $e->getMessage(), KL_ERROR);
             }
         }
     }
@@ -627,7 +627,7 @@ class SmartAlarmManager extends IPSModuleStrict
             switch($var['VariableType']) {
                 case 0: // Boolean
                     $targetValueStr = strtolower(trim((string)$targetValueStr));
-                    $val = ($targetValueStr === 'true' || $targetValueStr === '1' || $targetValueStr === 'wahr');
+                    $val = ($targetValueStr === 'true'|| $targetValueStr === '1'|| $targetValueStr === 'wahr');
                     break;
                 case 1: // Integer
                     $val = (int)$targetValueStr;
@@ -641,7 +641,7 @@ class SmartAlarmManager extends IPSModuleStrict
                     break;
             }
             
-            $this->LogMessage("Setze Ziel-Variable $targetId auf Wert: " . var_export($val, true), KL_NOTIFY);
+            $this->LogMessage("Setze Ziel-Variable $targetId auf Wert: ". var_export($val, true), KL_NOTIFY);
             try {
                 if (HasAction($targetId)) {
                     RequestAction($targetId, $val);
@@ -649,7 +649,7 @@ class SmartAlarmManager extends IPSModuleStrict
                     SetValue($targetId, $val);
                 }
             } catch (Exception $e) {
-                $this->LogMessage("Fehler beim Setzen der Ziel-Variable $targetId: " . $e->getMessage(), KL_ERROR);
+                $this->LogMessage("Fehler beim Setzen der Ziel-Variable $targetId: ". $e->getMessage(), KL_ERROR);
             }
         }
     }
@@ -658,24 +658,24 @@ class SmartAlarmManager extends IPSModuleStrict
     {
         $profiles = $this->GetActionProfiles($profileID);
         if (empty($profiles)) {
-            echo "Fehler: Profil(e) '$profileID' nicht gefunden!";
+            echo "Fehler: Profil(e) '$profileID'nicht gefunden!";
             return;
         }
 
         if ($turnOff) {
-            $this->SendDebug("Test", "Stoppe Profile: " . $profileID, 0);
+            $this->SendDebug("Test", "Stoppe Profile: ". $profileID, 0);
             foreach ($profiles as $profile) {
                 $this->TriggerHomematicLEDs($profile, true);
                 $this->TriggerHomematicSirens($profile, true);
             }
-            echo "Profile '$profileID' gestoppt (LEDs & Sirenen Aus).";
+            echo "Profile '$profileID'gestoppt (LEDs & Sirenen Aus).";
         } else {
-            $msg = "TEST-ALARM für Profil: " . $profileID;
-            $this->SendDebug("Test", "Teste Profile: " . $profileID, 0);
+            $msg = "TEST-ALARM für Profil: ". $profileID;
+            $this->SendDebug("Test", "Teste Profile: ". $profileID, 0);
             foreach ($profiles as $profile) {
                 $this->TriggerInfo($profile, $msg);
             }
-            echo "Profile '$profileID' getestet (Signale gesendet).";
+            echo "Profile '$profileID'getestet (Signale gesendet).";
         }
     }
 
@@ -683,7 +683,7 @@ class SmartAlarmManager extends IPSModuleStrict
     {
         if (is_bool($currentVal)) {
             $t = strtolower(trim((string)$triggerValStr));
-            $target = ($t === 'true' || $t === '1' || $t === 'wahr');
+            $target = ($t === 'true'|| $t === '1'|| $t === 'wahr');
             return $currentVal === $target;
         }
         return (string)$currentVal === (string)$triggerValStr;
@@ -691,7 +691,7 @@ class SmartAlarmManager extends IPSModuleStrict
 
     protected function LogMessage(string $Message, int $Type): bool
     {
-        IPS_LogMessage('SmartVillaKunterbunt', 'SmartAlarmManager: ' . $Message);
+        IPS_LogMessage('SmartVillaKunterbunt', 'SmartAlarmManager: '. $Message);
         return true;
     }
 
@@ -702,7 +702,7 @@ class SmartAlarmManager extends IPSModuleStrict
     "elements": [
         {
             "type": "ExpansionPanel",
-            "caption": "⚙️ Globale Einstellungen & Eskalation",
+            "caption": "⚙ Globale Einstellungen & Eskalation",
             "items": [
                 {
                     "type": "RowLayout",
