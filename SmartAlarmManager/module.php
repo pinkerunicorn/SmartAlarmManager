@@ -28,9 +28,13 @@ class SmartAlarmManager extends IPSModuleStrict
 
         // Summary Variables for Tile UI
         $this->RegisterVariableInteger("SystemStatus", "System Status", "SAM.SystemStatus", 1);
+        IPS_SetIcon($this->GetIDForIdent('SystemStatus'), 'Information');
         $this->RegisterVariableInteger("ActiveAlarmsCount", "Aktive Alarme", "", 2);
+        IPS_SetIcon($this->GetIDForIdent('ActiveAlarmsCount'), 'Warning');
         $this->RegisterVariableString("LastEvent", "Letztes Ereignis", "", 3);
-        $this->RegisterVariableBoolean("AcknowledgeAll", "Alle Alarme quittieren", "~Switch", 4);
+        IPS_SetIcon($this->GetIDForIdent('LastEvent'), 'Flag');
+        $this->RegisterVariableBoolean("AcknowledgeAll", "Alle Alarme quittieren", "", 4);
+        IPS_SetIcon($this->GetIDForIdent('AcknowledgeAll'), 'Ok');
         $this->EnableAction("AcknowledgeAll");
     }
 
@@ -46,6 +50,27 @@ class SmartAlarmManager extends IPSModuleStrict
             IPS_SetVariableProfileAssociation('SmartAlarm.Status', 4, 'VOLLALARM', 'Alert', 0xFF0000);
         }
         IPS_SetVariableCustomProfile($this->GetIDForIdent('SystemStatus'), 'SmartAlarm.Status');
+
+        if (@IPS_GetObjectIDByIdent('ActiveAlarmsCount', $this->InstanceID) !== false) {
+            IPS_SetVariableCustomPresentation($this->GetIDForIdent('ActiveAlarmsCount'), [
+                'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                'ICON'         => 'Warning'
+            ]);
+        }
+
+        if (@IPS_GetObjectIDByIdent('LastEvent', $this->InstanceID) !== false) {
+            IPS_SetVariableCustomPresentation($this->GetIDForIdent('LastEvent'), [
+                'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                'ICON'         => 'Flag'
+            ]);
+        }
+
+        if (@IPS_GetObjectIDByIdent('AcknowledgeAll', $this->InstanceID) !== false) {
+            IPS_SetVariableCustomPresentation($this->GetIDForIdent('AcknowledgeAll'), [
+                'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
+                'ICON'         => 'Ok'
+            ]);
+        }
 
 
         // Unregister all old messages
