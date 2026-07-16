@@ -1,55 +1,49 @@
 {
-    "id":  "{F2D396E5-AA02-4A82-9CD8-B7C5963E8D09}",
-    "name":  "SmartAlarmManager",
-    "type":  3,
-    "vendor":  "SmartAlarm",
-    "aliases":  [
-                    "Smart Alarm Manager"
-                ],
-    "parentRequirements":  [
-
-                           ],
-    "childRequirements":  [
-
-                          ],
-    "implemented":  [
-
-                    ],
-    "prefix":  "SAM",
-    "author":  "Florian GraÃŸinger",
-    "url":  "https://github.com/pinkerunicorn/",
-    "properties":  {
-                       "MonitoredVariables":  {
-                                                  "type":  "string",
-                                                  "default":  "[]"
-                                              },
-                       "EscalationTimeLvl2":  {
-                                                  "type":  "integer",
-                                                  "default":  300
-                                              },
-                       "EscalationTimeLvl3":  {
-                                                  "type":  "integer",
-                                                  "default":  900
-                                              },
-                       "TargetWebFront":  {
-                                              "type":  "integer",
-                                              "default":  0
-                                          },
-                       "TargetSMTP":  {
-                                          "type":  "integer",
-                                          "default":  0
-                                      },
-                       "TargetVestaboard":  {
-                                                "type":  "integer",
-                                                "default":  0
-                                            },
-                       "TargetSonos":  {
-                                           "type":  "integer",
-                                           "default":  0
-                                       },
-                       "EmailAddress":  {
-                                            "type":  "string",
-                                            "default":  ""
-                                        }
-                   }
+    "id": "{F2D396E5-AA02-4A82-9CD8-B7C5963E8D09}",
+    "name": "SmartAlarmManager",
+    "type": 3,
+    "vendor": "SmartAlarm",
+    "aliases": [
+        "Smart Alarm Manager"
+    ],
+    "parentRequirements": [],
+    "childRequirements": [],
+    "implemented": [],
+    "prefix": "SAM",
+    "author": "Florian Graßinger",
+    "url": "https://github.com/pinkerunicorn/",
+    "properties": {
+        "MonitoredVariables": {
+            "type": "string",
+            "default": "[]"
+        },
+        "EscalationTimeLvl2": {
+            "type": "integer",
+            "default": 300
+        },
+        "EscalationTimeLvl3": {
+            "type": "integer",
+            "default": 900
+        },
+        "TargetWebFront": {
+            "type": "integer",
+            "default": 0
+        },
+        "TargetSMTP": {
+            "type": "integer",
+            "default": 0
+        },
+        "TargetVestaboard": {
+            "type": "integer",
+            "default": 0
+        },
+        "TargetSonos": {
+            "type": "integer",
+            "default": 0
+        },
+        "EmailAddress": {
+            "type": "string",
+            "default": ""
+        }
+    }
 }
