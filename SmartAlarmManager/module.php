@@ -90,7 +90,7 @@ class SmartAlarmManager extends IPSModuleStrict
             if ($vid > 0 && IPS_VariableExists($vid)) {
                 $this->RegisterMessage($vid, VM_UPDATE);
                 
-                if (($item['AlarmType'] ?? 0) == 0) {
+                if (($item['AlarmType'] ?? 0) == 0 || ($item['AlarmType'] ?? 0) == 2) {
                     $ident = "Alarm_". $vid;
                     $activeIdents[] = $ident;
                     $this->MaintainVariable($ident, "Status: ". ($item['Message'] ?? 'Alarm'), 0, "~Alert", 0, true);
@@ -155,6 +155,14 @@ class SmartAlarmManager extends IPSModuleStrict
                         $this->SetBuffer("ActiveDelays", json_encode($delays));
                         if (empty($delays)) {
                             $this->SetTimerInterval("DelayTimer", 0);
+                        }
+                    }
+                    
+                    if (($item['AlarmType'] ?? 0) == 2) {
+                        $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
+                        if (isset($alarms[$vid])) {
+                            $this->LogMessage("Auto-Reset für Sensor/Variable $vid", KL_NOTIFY);
+                            $this->RequestAction("Alarm_".$vid, false);
                         }
                     }
                 }
@@ -853,6 +861,10 @@ class SmartAlarmManager extends IPSModuleStrict
                             {
                                 "caption": "Info / Türklingel (Einmalig)",
                                 "value": 1
+                            },
+                            {
+                                "caption": "Alarm (Eskalation, Auto-Reset)",
+                                "value": 2
                             }
                         ]
                     }
