@@ -40,45 +40,54 @@ class SmartAlarmManager extends IPSModuleStrict
 
     public function ApplyChanges(): void{
         parent::ApplyChanges();
-
         // --- Auto-generated References ---
         foreach ($this->GetReferenceList() as $refID) {
             $this->UnregisterReference($refID);
         }
-        
-        $targetWebFront = $this->ReadPropertyInteger("TargetWebFront");
-        if ($targetWebFront > 1 && @IPS_ObjectExists($targetWebFront)) $this->RegisterReference($targetWebFront);
-        $targetSMTP = $this->ReadPropertyInteger("TargetSMTP");
-        if ($targetSMTP > 1 && @IPS_ObjectExists($targetSMTP)) $this->RegisterReference($targetSMTP);
-        $targetVestaboard = $this->ReadPropertyInteger("TargetVestaboard");
-        if ($targetVestaboard > 1 && @IPS_ObjectExists($targetVestaboard)) $this->RegisterReference($targetVestaboard);
-        $targetSonos = $this->ReadPropertyInteger("TargetSonos");
-        if ($targetSonos > 1 && @IPS_ObjectExists($targetSonos)) $this->RegisterReference($targetSonos);
-        
-        $monitored = json_decode($this->ReadPropertyString("MonitoredVariables"), true);
-        if (is_array($monitored)) {
-            foreach ($monitored as $item) {
+        $ref_TargetWebFront = $this->ReadPropertyInteger('TargetWebFront');
+        if ($ref_TargetWebFront > 1 && @IPS_ObjectExists($ref_TargetWebFront)) {
+            $this->RegisterReference($ref_TargetWebFront);
+        }
+        $ref_TargetSMTP = $this->ReadPropertyInteger('TargetSMTP');
+        if ($ref_TargetSMTP > 1 && @IPS_ObjectExists($ref_TargetSMTP)) {
+            $this->RegisterReference($ref_TargetSMTP);
+        }
+        $ref_TargetVestaboard = $this->ReadPropertyInteger('TargetVestaboard');
+        if ($ref_TargetVestaboard > 1 && @IPS_ObjectExists($ref_TargetVestaboard)) {
+            $this->RegisterReference($ref_TargetVestaboard);
+        }
+        $ref_TargetSonos = $this->ReadPropertyInteger('TargetSonos');
+        if ($ref_TargetSonos > 1 && @IPS_ObjectExists($ref_TargetSonos)) {
+            $this->RegisterReference($ref_TargetSonos);
+        }
+        $list_MonitoredVariables = json_decode($this->ReadPropertyString('MonitoredVariables'), true);
+        if (is_array($list_MonitoredVariables)) {
+            foreach ($list_MonitoredVariables as $item) {
                 $vid = $item['VariableID'] ?? 0;
                 if ($vid > 1 && @IPS_ObjectExists($vid)) {
                     $this->RegisterReference($vid);
                 }
             }
         }
-        
-        $profiles = json_decode($this->ReadPropertyString("ActionProfiles"), true);
-        if (is_array($profiles)) {
-            foreach ($profiles as $profile) {
-                $targetId = $profile['TargetVariableID'] ?? 0;
-                if ($targetId > 1 && @IPS_ObjectExists($targetId)) $this->RegisterReference($targetId);
-                
-                $hmMp3 = $profile['HmIP_MP3_Inst'] ?? 0;
-                if ($hmMp3 > 1 && @IPS_ObjectExists($hmMp3)) $this->RegisterReference($hmMp3);
-                
-                $hmLed = $profile['HmIP_LED_Inst'] ?? 0;
-                if ($hmLed > 1 && @IPS_ObjectExists($hmLed)) $this->RegisterReference($hmLed);
-                
-                $hmSiren = $profile['HmIP_Siren_Inst'] ?? 0;
-                if ($hmSiren > 1 && @IPS_ObjectExists($hmSiren)) $this->RegisterReference($hmSiren);
+        $list_ActionProfiles = json_decode($this->ReadPropertyString('ActionProfiles'), true);
+        if (is_array($list_ActionProfiles)) {
+            foreach ($list_ActionProfiles as $item) {
+                $vid = $item['HmIP_MP3_Inst'] ?? 0;
+                if ($vid > 1 && @IPS_ObjectExists($vid)) {
+                    $this->RegisterReference($vid);
+                }
+                $vid = $item['HmIP_LED_Inst'] ?? 0;
+                if ($vid > 1 && @IPS_ObjectExists($vid)) {
+                    $this->RegisterReference($vid);
+                }
+                $vid = $item['HmIP_Siren_Inst'] ?? 0;
+                if ($vid > 1 && @IPS_ObjectExists($vid)) {
+                    $this->RegisterReference($vid);
+                }
+                $vid = $item['TargetVariableID'] ?? 0;
+                if ($vid > 1 && @IPS_ObjectExists($vid)) {
+                    $this->RegisterReference($vid);
+                }
             }
         }
         // ---------------------------------
