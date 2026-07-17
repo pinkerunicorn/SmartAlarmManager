@@ -41,6 +41,48 @@ class SmartAlarmManager extends IPSModuleStrict
     public function ApplyChanges(): void{
         parent::ApplyChanges();
 
+        // --- Auto-generated References ---
+        foreach ($this->GetReferenceList() as $refID) {
+            $this->UnregisterReference($refID);
+        }
+        
+        $targetWebFront = $this->ReadPropertyInteger("TargetWebFront");
+        if ($targetWebFront > 1 && @IPS_ObjectExists($targetWebFront)) $this->RegisterReference($targetWebFront);
+        $targetSMTP = $this->ReadPropertyInteger("TargetSMTP");
+        if ($targetSMTP > 1 && @IPS_ObjectExists($targetSMTP)) $this->RegisterReference($targetSMTP);
+        $targetVestaboard = $this->ReadPropertyInteger("TargetVestaboard");
+        if ($targetVestaboard > 1 && @IPS_ObjectExists($targetVestaboard)) $this->RegisterReference($targetVestaboard);
+        $targetSonos = $this->ReadPropertyInteger("TargetSonos");
+        if ($targetSonos > 1 && @IPS_ObjectExists($targetSonos)) $this->RegisterReference($targetSonos);
+        
+        $monitored = json_decode($this->ReadPropertyString("MonitoredVariables"), true);
+        if (is_array($monitored)) {
+            foreach ($monitored as $item) {
+                $vid = $item['VariableID'] ?? 0;
+                if ($vid > 1 && @IPS_ObjectExists($vid)) {
+                    $this->RegisterReference($vid);
+                }
+            }
+        }
+        
+        $profiles = json_decode($this->ReadPropertyString("ActionProfiles"), true);
+        if (is_array($profiles)) {
+            foreach ($profiles as $profile) {
+                $targetId = $profile['TargetVariableID'] ?? 0;
+                if ($targetId > 1 && @IPS_ObjectExists($targetId)) $this->RegisterReference($targetId);
+                
+                $hmMp3 = $profile['HmIP_MP3_Inst'] ?? 0;
+                if ($hmMp3 > 1 && @IPS_ObjectExists($hmMp3)) $this->RegisterReference($hmMp3);
+                
+                $hmLed = $profile['HmIP_LED_Inst'] ?? 0;
+                if ($hmLed > 1 && @IPS_ObjectExists($hmLed)) $this->RegisterReference($hmLed);
+                
+                $hmSiren = $profile['HmIP_Siren_Inst'] ?? 0;
+                if ($hmSiren > 1 && @IPS_ObjectExists($hmSiren)) $this->RegisterReference($hmSiren);
+            }
+        }
+        // ---------------------------------
+
         if (!IPS_VariableProfileExists('SmartAlarm.Status')) {
             IPS_CreateVariableProfile('SmartAlarm.Status', 1);
             IPS_SetVariableProfileAssociation('SmartAlarm.Status', 0, 'Alles OK', 'Ok', 0x00FF00);
