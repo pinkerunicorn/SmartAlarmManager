@@ -789,6 +789,10 @@ class SmartAlarmManager extends IPSModuleStrict
             "caption": "⚙ Globale Einstellungen & Eskalation",
             "items": [
                 {
+                    "type": "Label",
+                    "caption": "Hier stellst du ein, nach wie vielen Sekunden die nächste Eskalationsstufe auslöst."
+                },
+                {
                     "type": "RowLayout",
                     "items": [
                         {
@@ -811,6 +815,10 @@ class SmartAlarmManager extends IPSModuleStrict
             "type": "ExpansionPanel",
             "caption": "📢 Globale Schnittstellen / Ausgabegeräte",
             "items": [
+                {
+                    "type": "Label",
+                    "caption": "Hier stellst du ein, welche Instanzen für globale Nachrichten und Signale genutzt werden."
+                },
                 {
                     "type": "RowLayout",
                     "items": [
@@ -851,6 +859,10 @@ class SmartAlarmManager extends IPSModuleStrict
         {
             "type": "Label",
             "caption": "Überwachte Variablen (Sensoren / Auslöser)"
+        },
+        {
+            "type": "Label",
+            "caption": "Hier stellst du ein, welche Sensoren überwacht werden und wann ein Alarm ausgelöst wird."
         },
         {
             "type": "List",
@@ -936,6 +948,10 @@ class SmartAlarmManager extends IPSModuleStrict
             "caption": "Aktions-Profile"
         },
         {
+            "type": "Label",
+            "caption": "Hier stellst du ein, was bei einem bestimmten Profil-Alarm passieren soll (z.B. Sirenen oder Lichter aktivieren)."
+        },
+        {
             "type": "List",
             "name": "ActionProfiles",
             "caption": "Profile",
@@ -947,7 +963,7 @@ class SmartAlarmManager extends IPSModuleStrict
                 {
                     "caption": "Profil-ID (Name)",
                     "name": "ProfileID",
-                    "width": "150px",
+                    "width": "auto",
                     "add": "Neues_Profil",
                     "edit": {
                         "type": "ValidationTextBox"
