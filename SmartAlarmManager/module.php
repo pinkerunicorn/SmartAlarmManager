@@ -471,10 +471,10 @@ class SmartAlarmManager extends IPSModuleStrict
         if ($profile['UseVestaboard'] ?? false) {
             $vesta = $this->ReadPropertyInteger("TargetVestaboard");
             if ($vesta > 0 && IPS_InstanceExists($vesta)) {
-                if (function_exists('VESTA_SendMessage')) {
-                    $this->LogMessage("Vestaboard: Sende Nachricht", KL_NOTIFY);
+                if (function_exists('VESTAG_PushAlert')) {
+                    $this->LogMessage("Vestaboard: Sende Alarm-Nachricht via Generator", KL_NOTIFY);
                     try {
-                        VESTA_SendMessage($vesta, "ALARM:\n". $message);
+                        VESTAG_PushAlert($vesta, "ALARM:\n". $message, true);
                     } catch (Exception $e) {
                         $this->LogMessage("Fehler beim Senden an Vestaboard: ". $e->getMessage(), KL_ERROR);
                     }
@@ -515,12 +515,12 @@ class SmartAlarmManager extends IPSModuleStrict
         if ($profile['UseVestaboard'] ?? false) {
             $vesta = $this->ReadPropertyInteger("TargetVestaboard");
             if ($vesta > 0 && IPS_InstanceExists($vesta)) {
-                if (function_exists('VESTA_SendMessage')) {
-                    $this->LogMessage("Vestaboard: Sende Nachricht", KL_NOTIFY);
+                if (function_exists('VESTAG_PushAlert')) {
+                    $this->LogMessage("Vestaboard: Sende Vollalarm via Generator", KL_NOTIFY);
                     try {
-                        VESTA_SendMessage($vesta, "!!! VOLLALARM !!!\n". $message);
+                        VESTAG_PushAlert($vesta, "!!! VOLLALARM !!!\n" . $message, true);
                     } catch (Exception $e) {
-                        $this->LogMessage("Fehler beim Senden an Vestaboard: ". $e->getMessage(), KL_ERROR);
+                        $this->LogMessage("Fehler beim Senden an Vestaboard: " . $e->getMessage(), KL_ERROR);
                     }
                 }
             }
@@ -564,12 +564,12 @@ class SmartAlarmManager extends IPSModuleStrict
         if ($profile['UseVestaboard'] ?? false) {
             $vesta = $this->ReadPropertyInteger("TargetVestaboard");
             if ($vesta > 0 && IPS_InstanceExists($vesta)) {
-                if (function_exists('VESTA_SendMessage')) {
-                    $this->LogMessage("Vestaboard: Sende Nachricht", KL_NOTIFY);
+                if (function_exists('VESTAG_PushAlert')) {
+                    $this->LogMessage("Vestaboard: Sende Info-Nachricht via Generator", KL_NOTIFY);
                     try {
-                        VESTA_SendMessage($vesta, $message);
+                        VESTAG_PushAlert($vesta, $message, false);
                     } catch (Exception $e) {
-                        $this->LogMessage("Fehler beim Senden an Vestaboard: ". $e->getMessage(), KL_ERROR);
+                        $this->LogMessage("Fehler beim Senden an Vestaboard: " . $e->getMessage(), KL_ERROR);
                     }
                 }
             }
