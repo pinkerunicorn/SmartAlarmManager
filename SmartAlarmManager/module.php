@@ -318,11 +318,20 @@ class SmartAlarmManager extends IPSModuleStrict
         if (strpos($Ident, "Alarm_") === 0) {
             if ($Value == false) {
                 $this->SetValue($Ident, false);
-                $this->LogMessage("Alarm quittiert: ". $Ident, KL_NOTIFY);
-                $this->SendDebug("Acknowledge", "Quittiert: ". $Ident, 0);
-                
+
                 $vid = substr($Ident, 6);
                 $alarms = json_decode($this->GetBuffer("ActiveAlarms"), true) ?: [];
+
+                // Lesbaren Namen für das Log ermitteln
+                $alarmName = $alarms[$vid]['message'] ?? null;
+                if (!$alarmName && IPS_VariableExists((int)$vid)) {
+                    $alarmName = IPS_GetName((int)$vid);
+                }
+                $alarmName = $alarmName ?: ('Variable #' . $vid);
+
+                $this->SLog('INFO', 'Alarm quittiert', $alarmName);
+                $this->SendDebug("Acknowledge", "Quittiert: ". $Ident, 0);
+
                 if (isset($alarms[$vid])) {
                     $profiles = $alarms[$vid]['profiles'] ?? [];
                     if (empty($profiles) && isset($alarms[$vid]['profile'])) {
