@@ -146,7 +146,7 @@ class SmartAlarmManager extends IPSModuleStrict
                     $activeIdents[] = $ident;
                     $this->MaintainVariable($ident, "Status: ". ($item['Message'] ?? 'Alarm'), 0, "", 0, true);
                     IPS_SetVariableCustomPresentation($this->GetIDForIdent($ident), [
-                        'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                        'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
                         'ICON'         => 'Alert'
                     ]);
                     $this->EnableAction($ident);
